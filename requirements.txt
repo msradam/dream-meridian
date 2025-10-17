@@ -1,0 +1,9 @@
+langchain 
+langchain-community 
+ollama 
+duckdb 
+geopandas 
+networkx 
+osmnx 
+pandas
+networkit
