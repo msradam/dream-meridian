@@ -1,0 +1,18 @@
+{
+  "slug": "coxs_bazar",
+  "name": "Cox's Bazar, Bangladesh",
+  "center": {
+    "lat": 21.3414771,
+    "lon": 92.09173329999999
+  },
+  "bounds": {
+    "north": 21.9297185,
+    "south": 20.7532357,
+    "east": 92.34133759999999,
+    "west": 91.842129
+  },
+  "nodes": 27551,
+  "edges": 71530,
+  "pois": 6509,
+  "built_at": "2025-12-01 18:24:31"
+}

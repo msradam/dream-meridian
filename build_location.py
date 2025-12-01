@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+./build_location.py
 Dream Meridian - Location Builder
 Downloads street network and OSM features for any location.
 
@@ -21,7 +22,6 @@ import duckdb
 import pandas as pd
 import json
 import time
-import os
 import sys
 import math
 import requests
@@ -332,7 +332,7 @@ def download_osm_features(place_name):
 
 
 def _process_features(gdf):
-    """Process GeoDataFrame into list of feature dicts."""
+    """Process GeoDataFrame into list of feature dicts with deduplication."""
     if len(gdf) == 0:
         return []
     
@@ -357,9 +357,27 @@ def _process_features(gdf):
     cols = [c for c in cols if c in gdf.columns]
     
     result = gdf[cols].to_dict('records')
-    print(f"✓ Processed {len(result):,} features")
     
-    return result
+    # Deduplicate: same name + same location (within ~10m)
+    before_count = len(result)
+    seen = set()
+    deduped = []
+    for r in result:
+        # Round to 4 decimal places (~11m precision)
+        key = (
+            r.get('name'),
+            round(r['lat'], 4),
+            round(r['lon'], 4),
+            r['tag_value']
+        )
+        if key not in seen:
+            seen.add(key)
+            deduped.append(r)
+    
+    removed = before_count - len(deduped)
+    print(f"✓ Processed {len(deduped):,} features ({removed:,} duplicates removed)")
+    
+    return deduped
 
 def load_features_to_duckdb(features, db_path):
     """Load features into DuckDB."""
