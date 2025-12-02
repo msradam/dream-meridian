@@ -102,7 +102,16 @@ def find_nearest_node(lat: float, lon: float) -> tuple:
     return result
 
 def list_pois(poi_type: str, lat: float, lon: float, radius_m: int = 1000) -> str:
-    """List POIs of a given type within radius."""
+    """List POIs of a given type within radius, with total count."""
+    # Get total count first
+    total = con.execute("""
+        SELECT COUNT(*)
+        FROM osm_features
+        WHERE tag_value = ?
+          AND ST_Distance(geom, ST_Point(?, ?)) * 111000 < ?
+    """, [poi_type, lon, lat, radius_m]).fetchone()[0]
+    
+    # Then get the POIs (limited for display)
     results = con.execute("""
         SELECT name, lat, lon,
                ST_Distance(geom, ST_Point(?, ?)) * 111000 as distance_m
@@ -110,29 +119,15 @@ def list_pois(poi_type: str, lat: float, lon: float, radius_m: int = 1000) -> st
         WHERE tag_value = ?
           AND ST_Distance(geom, ST_Point(?, ?)) * 111000 < ?
         ORDER BY distance_m
-        LIMIT 20
+        LIMIT 50
     """, [lon, lat, poi_type, lon, lat, radius_m]).fetchall()
     
     return json.dumps({
         "poi_type": poi_type,
-        "count": len(results),
-        "pois": [{"name": r[0], "lat": r[1], "lon": r[2], "distance_m": r[3]} for r in results]
-    })
-
-def count_pois(poi_type: str, lat: float, lon: float, radius_m: int = 1000) -> str:
-    """Count POIs of a given type within radius."""
-    result = con.execute("""
-        SELECT COUNT(*)
-        FROM osm_features
-        WHERE tag_value = ?
-          AND ST_Distance(geom, ST_Point(?, ?)) * 111000 < ?
-    """, [poi_type, lon, lat, radius_m]).fetchone()
-    
-    return json.dumps({
-        "poi_type": poi_type,
-        "count": result[0],
+        "count": total,
         "radius_m": radius_m,
-        "center": {"lat": lat, "lon": lon}
+        "center": {"lat": lat, "lon": lon},
+        "pois": [{"name": r[0], "lat": r[1], "lon": r[2], "distance_m": r[3]} for r in results]
     })
 
 def find_nearest_poi_with_route(poi_type: str, lat: float, lon: float, limit: int = 3) -> str:
@@ -311,7 +306,6 @@ def geocode_place(place_name: str) -> str:
 
 TOOLS = {
     "list_pois": list_pois,
-    "count_pois": count_pois,
     "find_nearest_poi_with_route": find_nearest_poi_with_route,
     "calculate_route": calculate_route,
     "generate_isochrone": generate_isochrone,

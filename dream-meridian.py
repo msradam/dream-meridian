@@ -40,9 +40,8 @@ water_point, fuel, bus_station, place_of_worship
 
 Tools:
 - geocode_place(place_name) - Get coordinates for a place name
-- list_pois(poi_type,lat,lon,radius_m) - List POIs with distances
-- count_pois(poi_type,lat,lon,radius_m) - Count POIs in area
-- find_nearest_poi_with_route(poi_type,lat,lon) - Nearest POIs with walking distance
+- list_pois(poi_type,lat,lon,radius_m) - List POIs with count and distances
+- find_nearest_poi_with_route(poi_type,lat,lon) - Nearest POIs with walking time
 - generate_isochrone(lat,lon,max_minutes) - Walkable area from point
 - calculate_route(start_lat,start_lon,end_lat,end_lon) - Walking route between points"""
 # ============================================================================
