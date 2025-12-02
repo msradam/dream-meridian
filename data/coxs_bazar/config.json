@@ -15,5 +15,10 @@
   "edges": 71530,
   "pois": 6509,
   "places": 464,
-  "built_at": "2025-12-01 19:12:53"
+  "built_at": "2025-12-01 19:12:53",
+  "examples": [
+    "Where's the nearest hospital to Camp 10?",
+    "How far is it to walk from Camp 8W to Camp 15?",
+    "What can I reach in 15 minutes from Camp 12?"
+  ]
 }
