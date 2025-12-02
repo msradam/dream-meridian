@@ -1,4 +1,5 @@
 """
+./spatial_tools.py
 Dream Meridian - Spatial Tools
 Multi-location support: load_location("dhaka") loads data/dhaka/*
 """
@@ -134,7 +135,7 @@ def count_pois(poi_type: str, lat: float, lon: float, radius_m: int = 1000) -> s
         "center": {"lat": lat, "lon": lon}
     })
 
-def find_nearest_poi_with_route(poi_type: str, start_lat: float, start_lon: float, limit: int = 3) -> str:
+def find_nearest_poi_with_route(poi_type: str, lat: float, lon: float, limit: int = 3) -> str:
     """Find nearest POIs and calculate walking routes to each."""
     # Get nearby POIs
     pois = con.execute("""
@@ -144,13 +145,13 @@ def find_nearest_poi_with_route(poi_type: str, start_lat: float, start_lon: floa
           AND name IS NOT NULL
         ORDER BY ST_Distance(geom, ST_Point(?, ?))
         LIMIT ?
-    """, [poi_type, start_lon, start_lat, limit]).fetchall()
+    """, [poi_type, lon, lat, limit]).fetchall()
     
     if not pois:
         return json.dumps({"poi_type": poi_type, "found": 0, "nearest_pois": []})
     
     # Find start node
-    start_node = find_nearest_node(start_lat, start_lon)
+    start_node = find_nearest_node(lat, lon)
     start_nk = node_mapping.get(start_node[0])
     
     results = []
@@ -235,9 +236,9 @@ def calculate_route(start_lat: float, start_lon: float, end_lat: float, end_lon:
         "path": path_coords
     })
 
-def generate_isochrone(start_lat: float, start_lon: float, max_minutes: int = 15) -> str:
+def generate_isochrone(lat: float, lon: float, max_minutes: int = 15) -> str:
     """Generate walkable area from a point."""
-    start_node = find_nearest_node(start_lat, start_lon)
+    start_node = find_nearest_node(lat, lon)
     start_nk = node_mapping.get(start_node[0])
     
     if start_nk is None:
