@@ -130,17 +130,43 @@ def list_pois(poi_type: str, lat: float, lon: float, radius_m: int = 1000) -> st
         "pois": [{"name": r[0], "lat": r[1], "lon": r[2], "distance_m": r[3]} for r in results]
     })
 
-def find_nearest_poi_with_route(poi_type: str, lat: float, lon: float, limit: int = 3) -> str:
-    """Find nearest POIs and calculate walking routes to each."""
-    # Get nearby POIs
-    pois = con.execute("""
-        SELECT name, lat, lon
-        FROM osm_features
-        WHERE tag_value = ?
-          AND name IS NOT NULL
-        ORDER BY ST_Distance(geom, ST_Point(?, ?))
-        LIMIT ?
-    """, [poi_type, lon, lat, limit]).fetchall()
+def find_nearest_poi_with_route(poi_type: str, lat: float, lon: float, 
+                                  limit: int = 3, distance: int = None, 
+                                  radius_m: int = None) -> str:
+    """
+    Find nearest POIs and calculate walking routes to each.
+    
+    Args:
+        poi_type: Type of POI to search for (e.g., 'hospital', 'clinic')
+        lat: Latitude of starting point
+        lon: Longitude of starting point
+        limit: Maximum number of POIs to return (default: 3)
+        distance: Optional radius filter in meters (alias for radius_m)
+        radius_m: Optional radius filter in meters
+    """
+    # Handle distance/radius_m parameter (LLM sometimes passes 'distance')
+    search_radius = distance or radius_m
+    
+    # Build query based on whether we have a radius filter
+    if search_radius:
+        pois = con.execute("""
+            SELECT name, lat, lon
+            FROM osm_features
+            WHERE tag_value = ?
+              AND name IS NOT NULL
+              AND ST_Distance(geom, ST_Point(?, ?)) * 111000 < ?
+            ORDER BY ST_Distance(geom, ST_Point(?, ?))
+            LIMIT ?
+        """, [poi_type, lon, lat, search_radius, lon, lat, limit]).fetchall()
+    else:
+        pois = con.execute("""
+            SELECT name, lat, lon
+            FROM osm_features
+            WHERE tag_value = ?
+              AND name IS NOT NULL
+            ORDER BY ST_Distance(geom, ST_Point(?, ?))
+            LIMIT ?
+        """, [poi_type, lon, lat, limit]).fetchall()
     
     if not pois:
         return json.dumps({"poi_type": poi_type, "found": 0, "nearest_pois": []})
