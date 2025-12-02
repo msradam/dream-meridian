@@ -1,0 +1,15 @@
+[theme]
+base = "dark"
+primaryColor = "#3b82f6"
+backgroundColor = "#0f172a"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#e2e8f0"
+
+# Serif headings for gravitas
+headingFont = "'Crimson Pro':https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600;700&display=swap, serif"
+
+# Sans body for readability with data/coordinates
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap, sans-serif"
+
+# Monospace for code/coords
+codeFont = "monospace"
