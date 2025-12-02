@@ -40,6 +40,15 @@ TILE_ZOOM_LEVELS = range(11, 17)
 TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 TILE_RATE_LIMIT = 0.1
 
+# Place names (neighborhoods, suburbs, etc.) for geocoding
+PLACE_TAGS = {
+    'place': [
+        'neighbourhood', 'neighborhood', 'suburb', 'quarter',
+        'locality', 'hamlet', 'village', 'town', 'city',
+        'borough', 'district',
+    ],
+}
+
 # Humanitarian-relevant OSM tags - ALL IN ONE QUERY
 OSM_TAGS = {
     'amenity': [
@@ -379,6 +388,103 @@ def _process_features(gdf):
     
     return deduped
 
+def download_places(place_name):
+    """Download neighborhood/suburb/locality names for geocoding."""
+    print("\n" + "="*70)
+    print("DOWNLOADING PLACE NAMES")
+    print("="*70)
+    
+    print(f"\nTags: {', '.join(PLACE_TAGS.keys())}")
+    
+    try:
+        gdf = ox.features_from_place(place_name, tags=PLACE_TAGS)
+        print(f"✓ {len(gdf):,} places found")
+    except Exception as e:
+        print(f"✗ Failed: {e}")
+        return []
+    
+    if len(gdf) == 0:
+        return []
+    
+    # Get centroids
+    gdf_proj = gdf.to_crs(gdf.estimate_utm_crs())
+    gdf['centroid'] = gdf_proj.geometry.centroid.to_crs('EPSG:4326')
+    gdf['lat'] = gdf['centroid'].y
+    gdf['lon'] = gdf['centroid'].x
+    
+    # Extract place type
+    def get_place_type(row):
+        if 'place' in row.index and pd.notna(row['place']):
+            return str(row['place'])
+        return 'unknown'
+    
+    gdf['place_type'] = gdf.apply(get_place_type, axis=1)
+    
+    # Filter to rows with names
+    gdf = gdf[gdf['name'].notna()].copy()
+    
+    places = []
+    seen = set()
+    for _, row in gdf.iterrows():
+        name = row['name']
+        # Dedupe by name (case-insensitive)
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        places.append({
+            'name': name,
+            'lat': row['lat'],
+            'lon': row['lon'],
+            'place_type': row['place_type']
+        })
+    
+    print(f"✓ {len(places):,} unique places")
+    
+    # Show some examples
+    for p in places[:10]:
+        print(f"  • {p['name']} ({p['place_type']})")
+    if len(places) > 10:
+        print(f"  ... and {len(places) - 10} more")
+    
+    return places
+
+
+def load_places_to_duckdb(places, db_path):
+    """Load place names into DuckDB for geocoding."""
+    print("\n" + "="*70)
+    print("LOADING PLACES INTO DUCKDB")
+    print("="*70)
+    
+    con = duckdb.connect(str(db_path))
+    con.install_extension("spatial")
+    con.load_extension("spatial")
+    
+    con.execute("DROP TABLE IF EXISTS places")
+    
+    if len(places) == 0:
+        con.execute("""
+            CREATE TABLE places (
+                name VARCHAR, lat DOUBLE, lon DOUBLE, 
+                place_type VARCHAR, name_lower VARCHAR
+            )
+        """)
+        print("⚠️ No places to load (empty table created)")
+        con.close()
+        return 0
+    
+    df = pd.DataFrame(places)
+    df['name_lower'] = df['name'].str.lower()
+    
+    con.execute("CREATE TABLE places AS SELECT * FROM df")
+    con.execute("CREATE INDEX places_name_idx ON places(name_lower)")
+    
+    print(f"✓ Loaded {len(places):,} places")
+    
+    con.close()
+    return len(places)
+
+
 def load_features_to_duckdb(features, db_path):
     """Load features into DuckDB."""
     print("\n" + "="*70)
@@ -443,7 +549,7 @@ def load_features_to_duckdb(features, db_path):
 # CONFIG & SETUP
 # ============================================================================
 
-def save_config(output_dir, slug, location_name, G_nx, poi_count):
+def save_config(output_dir, slug, location_name, G_nx, poi_count, place_count):
     """Save location config."""
     bounds = get_graph_bounds(G_nx)
     center = get_graph_center(G_nx)
@@ -456,6 +562,7 @@ def save_config(output_dir, slug, location_name, G_nx, poi_count):
         "nodes": G_nx.number_of_nodes(),
         "edges": G_nx.number_of_edges(),
         "pois": poi_count,
+        "places": place_count,
         "built_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
     
@@ -498,28 +605,33 @@ def main():
     
     total_start = time.time()
     
-    # [1/4] Street network
-    print("\n[1/4] Downloading street network...")
+    # [1/5] Street network
+    print("\n[1/5] Downloading street network...")
     start = time.time()
     G_nx = ox.graph_from_place(location_name, network_type='all', simplify=True)
     print(f"✓ {G_nx.number_of_nodes():,} nodes, {G_nx.number_of_edges():,} edges ({time.time()-start:.1f}s)")
     
     bounds = get_graph_bounds(G_nx)
     
-    # [2/4] Convert graph
-    print("\n[2/4] Converting to NetworKit...")
+    # [2/5] Convert graph
+    print("\n[2/5] Converting to NetworKit...")
     G_nk, node_mapping, reverse_mapping = networkx_to_networkit(G_nx)
     save_graph(G_nx, G_nk, node_mapping, reverse_mapping, output_dir, slug)
     
-    # [3/4] Export nodes
-    print("\n[3/4] Building spatial database...")
+    # [3/5] Export nodes
+    print("\n[3/5] Building spatial database...")
     db_path = output_dir / f"{slug}.duckdb"
     export_nodes_to_duckdb(G_nx, db_path)
     
-    # [4/4] POI features
-    print("\n[4/4] Downloading humanitarian POI features...")
+    # [4/5] POI features
+    print("\n[4/5] Downloading humanitarian POI features...")
     features = download_osm_features(location_name)
     poi_count = load_features_to_duckdb(features, db_path)
+    
+    # [5/5] Place names for geocoding
+    print("\n[5/5] Downloading place names for geocoding...")
+    places = download_places(location_name)
+    place_count = load_places_to_duckdb(places, db_path)
     
     # Optional: Map tiles
     if download_tiles_flag:
@@ -528,7 +640,7 @@ def main():
     
     # Save config
     print("\nFinalizing...")
-    save_config(output_dir, slug, location_name, G_nx, poi_count)
+    save_config(output_dir, slug, location_name, G_nx, poi_count, place_count)
     
     total_time = time.time() - total_start
     
@@ -552,10 +664,11 @@ Files:
   {tiles_info}
 
 Stats:
-  Nodes: {G_nk.numberOfNodes():,}
-  Edges: {G_nk.numberOfEdges():,}
-  POIs:  {poi_count:,}
-  Time:  {total_time/60:.1f} minutes
+  Nodes:  {G_nk.numberOfNodes():,}
+  Edges:  {G_nk.numberOfEdges():,}
+  POIs:   {poi_count:,}
+  Places: {place_count:,}
+  Time:   {total_time/60:.1f} minutes
 
 ✅ Ready! Run: streamlit run app.py
 """)
