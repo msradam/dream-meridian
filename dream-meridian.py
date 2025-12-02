@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ./dream-meridian.py
-Dream Meridian - Offline Spatial Intelligence
+💠 DreamMeridian - Offline Spatial Intelligence
 
 Core query engine with CLI interface.
 
@@ -10,9 +10,6 @@ Usage:
     python dream-meridian.py -l dhaka "Schools within 1km of Gulshan"
     python dream-meridian.py --list
     python dream-meridian.py --health
-
-As a library:
-    from dream_meridian import query, load_location, list_locations
 """
 
 import argparse
@@ -44,9 +41,38 @@ Tools:
 - find_nearest_poi_with_route(poi_type,lat,lon) - Nearest POIs with walking time
 - generate_isochrone(lat,lon,max_minutes) - Walkable area from point
 - calculate_route(start_lat,start_lon,end_lat,end_lon) - Walking route between points"""
+
+# ============================================================================
+# Terminal Colors
+# ============================================================================
+
+class C:
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    RESET = '\033[0m'
+    CYAN = '\033[36m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    MAGENTA = '\033[35m'
+    BLUE = '\033[34m'
+    WHITE = '\033[97m'
+    RED = '\033[31m'
+
 # ============================================================================
 # Data Structures
 # ============================================================================
+
+@dataclass
+class LLMStats:
+    """Stats from llama.cpp inference."""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    prompt_ms: float = 0
+    completion_ms: float = 0
+    tokens_per_sec: float = 0
+    
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 @dataclass
 class QueryResult:
@@ -57,11 +83,15 @@ class QueryResult:
     geocoded: dict
     query_time: float
     modified_query: str
+    llm_stats: LLMStats = None
     success: bool = True
     error: str = None
     
     def to_dict(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        if self.llm_stats:
+            d['llm_stats'] = self.llm_stats.to_dict()
+        return d
 
 # ============================================================================
 # Location Management
@@ -81,7 +111,8 @@ def list_locations() -> dict:
                     "bounds": config["bounds"],
                     "nodes": config.get("nodes", 0),
                     "edges": config.get("edges", 0),
-                    "pois": config.get("pois", 0)
+                    "pois": config.get("pois", 0),
+                    "places": config.get("places", 0)
                 }
         except (json.JSONDecodeError, KeyError):
             continue
@@ -93,7 +124,7 @@ def load_location(slug: str) -> bool:
         spatial_tools.load_location(slug)
         geocode_layer.load_location(slug)
         return True
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         return False
 
 def get_current_location() -> str:
@@ -133,17 +164,7 @@ def health_check() -> dict:
 # ============================================================================
 
 def query(user_query: str, location: str = None, llm_url: str = LLAMA_URL) -> QueryResult:
-    """
-    Process a natural language spatial query.
-    
-    Args:
-        user_query: Natural language question
-        location: Location slug (loads if different from current)
-        llm_url: LLM server endpoint
-    
-    Returns:
-        QueryResult with tool output and metadata
-    """
+    """Process a natural language spatial query."""
     start_time = time.time()
     
     # Load location if specified and different
@@ -168,7 +189,7 @@ def query(user_query: str, location: str = None, llm_url: str = LLAMA_URL) -> Qu
     # Geocode place names in query
     try:
         modified_query, geocoded = geocode_layer.geocode_query(user_query)
-    except Exception as e:
+    except Exception:
         modified_query, geocoded = user_query, {}
     
     # Call LLM for tool selection
@@ -197,12 +218,22 @@ def query(user_query: str, location: str = None, llm_url: str = LLAMA_URL) -> Qu
         )
     
     # Parse LLM response
+    llm_stats = LLMStats()
     try:
         data = response.json()
         content = data["choices"][0]["message"]["content"]
         tool_call = json.loads(content)
         tool_name = tool_call["name"]
         tool_args = tool_call["arguments"]
+        
+        # Extract llama.cpp timing stats
+        if "usage" in data:
+            llm_stats.prompt_tokens = data["usage"].get("prompt_tokens", 0)
+            llm_stats.completion_tokens = data["usage"].get("completion_tokens", 0)
+        if "timings" in data:
+            llm_stats.prompt_ms = data["timings"].get("prompt_ms", 0)
+            llm_stats.completion_ms = data["timings"].get("predicted_ms", 0)
+            llm_stats.tokens_per_sec = data["timings"].get("predicted_per_second", 0)
     except (json.JSONDecodeError, KeyError) as e:
         return QueryResult(
             tool_name="", tool_args={}, result={"raw_response": content if 'content' in dir() else str(e)},
@@ -230,21 +261,122 @@ def query(user_query: str, location: str = None, llm_url: str = LLAMA_URL) -> Qu
         geocoded=geocoded,
         query_time=time.time() - start_time,
         modified_query=modified_query,
+        llm_stats=llm_stats,
         success=True
     )
 
 # ============================================================================
-# CLI Interface
+# CLI Formatting
 # ============================================================================
 
-def format_result(result: QueryResult, verbose: bool = False) -> str:
-    """Format QueryResult for terminal output."""
+def format_result_rich(result: QueryResult, location_info: dict = None) -> str:
+    """Format QueryResult with rich terminal output."""
+    lines = []
+    
+    if not result.success:
+        lines.append(f"{C.RED}✗ Error: {result.error}{C.RESET}")
+        return "\n".join(lines)
+    
+    # GEOCODING
+    if result.geocoded:
+        lines.append(f"{C.DIM}GEOCODING{C.RESET}")
+        for place, info in result.geocoded.items():
+            lines.append(f"  📍 {C.YELLOW}{place}{C.RESET} → {C.DIM}({info['lat']:.6f}, {info['lon']:.6f}){C.RESET}")
+        lines.append("")
+    
+    # LLM TOOL CALL
+    lines.append(f"{C.DIM}LLM TOOL CALL{C.RESET}")
+    lines.append(f"  {C.BOLD}Tool:{C.RESET}  {C.CYAN}{result.tool_name}{C.RESET}")
+    
+    # Format args nicely
+    args_str = json.dumps(result.tool_args, separators=(', ', ': '))
+    lines.append(f"  {C.BOLD}Args:{C.RESET}  {C.DIM}{args_str}{C.RESET}")
+    lines.append("")
+    
+    # RESULTS
+    data = result.result
+    lines.append(f"{C.DIM}RESULTS{C.RESET}")
+    
+    if "error" in data:
+        lines.append(f"  {C.RED}Error: {data['error']}{C.RESET}")
+    
+    elif result.tool_name == "list_pois":
+        poi_type = data.get('poi_type', 'POI')
+        count = data.get('count', 0)
+        radius = result.tool_args.get('radius_m', 1000)
+        lines.append(f"  Found {C.BOLD}{C.GREEN}{count}{C.RESET} {poi_type}(s) within {C.CYAN}{radius}m{C.RESET}")
+        pois = data.get("pois", [])
+        for poi in pois[:6]:
+            name = poi.get("name", "Unnamed")
+            dist = poi.get("distance_m", 0)
+            lines.append(f"    • {name} {C.DIM}({dist:.0f}m){C.RESET}")
+        if len(pois) > 6:
+            lines.append(f"    {C.DIM}... and {len(pois) - 6} more{C.RESET}")
+    
+    elif result.tool_name == "find_nearest_poi_with_route":
+        poi_type = data.get('poi_type', 'POI')
+        found = data.get('found', 0)
+        lines.append(f"  Nearest {poi_type}(s): {C.GREEN}{found} found{C.RESET}")
+        for poi in data.get("nearest_pois", [])[:5]:
+            name = poi.get("name", "Unnamed")
+            walk = poi.get("walk_minutes", 0)
+            dist = poi.get("distance_m", 0)
+            lines.append(f"    🚶 {C.BOLD}{name}{C.RESET} — {C.CYAN}{walk:.1f} min{C.RESET} {C.DIM}({dist:.0f}m){C.RESET}")
+    
+    elif result.tool_name == "calculate_route":
+        dist_km = data.get('distance_km', 0)
+        walk_min = data.get('walk_minutes', 0)
+        num_nodes = data.get('num_nodes', 0)
+        lines.append(f"  📏 Distance:   {C.CYAN}{dist_km:.2f} km{C.RESET}")
+        lines.append(f"  🚶 Walk time:  {C.GREEN}{walk_min:.0f} minutes{C.RESET}")
+        lines.append(f"  🔗 Path nodes: {C.DIM}{num_nodes}{C.RESET}")
+    
+    elif result.tool_name == "generate_isochrone":
+        max_min = data.get('max_minutes', 0)
+        reachable = data.get('reachable_nodes', 0)
+        boundary = len(data.get('boundary_points', []))
+        lines.append(f"  ⏱️  Max time:       {C.CYAN}{max_min} minutes{C.RESET}")
+        lines.append(f"  🔗 Reachable nodes: {C.GREEN}{reachable:,}{C.RESET}")
+        lines.append(f"  📐 Boundary points: {C.DIM}{boundary}{C.RESET}")
+    
+    elif result.tool_name == "geocode_place":
+        place = data.get('place', 'Unknown')
+        lat = data.get('lat', 0)
+        lon = data.get('lon', 0)
+        matches = data.get('matches', 0)
+        lines.append(f"  📍 {C.YELLOW}{place}{C.RESET} → ({lat:.6f}, {lon:.6f})")
+        lines.append(f"  🔍 {matches} match(es)")
+    
+    else:
+        lines.append(f"  {json.dumps(data, indent=2)}")
+    
+    lines.append("")
+    
+    # PERFORMANCE
+    lines.append(f"{C.DIM}PERFORMANCE{C.RESET}")
+    lines.append(f"  ⏱️  Total time:  {C.GREEN}{result.query_time:.2f}s{C.RESET}")
+    
+    # LLM stats from llama.cpp
+    if result.llm_stats and result.llm_stats.tokens_per_sec > 0:
+        stats = result.llm_stats
+        lines.append(f"  🧠 LLM inference:")
+        lines.append(f"     Prompt:     {C.DIM}{stats.prompt_tokens} tokens ({stats.prompt_ms:.0f}ms){C.RESET}")
+        lines.append(f"     Completion: {C.DIM}{stats.completion_tokens} tokens ({stats.completion_ms:.0f}ms){C.RESET}")
+        lines.append(f"     Speed:      {C.CYAN}{stats.tokens_per_sec:.1f} tok/s{C.RESET}")
+    
+    if location_info:
+        lines.append(f"  🗺️  Graph: {C.DIM}{location_info.get('nodes', 0):,} nodes · {location_info.get('pois', 0):,} POIs{C.RESET}")
+    
+    return "\n".join(lines)
+
+
+def format_result_simple(result: QueryResult) -> str:
+    """Format QueryResult for simple terminal output."""
     lines = []
     
     if not result.success:
         return f"Error: {result.error}"
     
-    # Header
     lines.append(f"Tool: {result.tool_name}")
     lines.append(f"Time: {result.query_time:.2f}s")
     
@@ -254,9 +386,7 @@ def format_result(result: QueryResult, verbose: bool = False) -> str:
     
     lines.append("")
     
-    # Results
     data = result.result
-    
     if "error" in data:
         lines.append(f"Error: {data['error']}")
     elif "count" in data:
@@ -278,16 +408,15 @@ def format_result(result: QueryResult, verbose: bool = False) -> str:
     elif "reachable_nodes" in data:
         lines.append(f"Reachable in {data['max_minutes']} min: {data['reachable_nodes']} nodes")
     
-    if verbose:
-        lines.append("")
-        lines.append("Raw result:")
-        lines.append(json.dumps(data, indent=2))
-    
     return "\n".join(lines)
+
+# ============================================================================
+# Main
+# ============================================================================
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Dream Meridian - Offline Spatial Intelligence",
+        description="💠 DreamMeridian - Offline Spatial Intelligence",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -305,6 +434,7 @@ Examples:
     parser.add_argument("--health", action="store_true", help="Check system health")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (include raw JSON)")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    parser.add_argument("--simple", action="store_true", help="Simple output (no colors)")
     parser.add_argument("--llm-url", default=LLAMA_URL, help="LLM server URL")
     
     args = parser.parse_args()
@@ -315,9 +445,11 @@ Examples:
         if not locations:
             print("No locations found. Run build_location.py first.")
             sys.exit(1)
-        print("Available locations:")
+        print(f"\n{C.BOLD}{C.BLUE}💠 DreamMeridian{C.RESET} — Available locations:\n")
         for slug, info in locations.items():
-            print(f"  {slug}: {info['name']} ({info['nodes']:,} nodes, {info['pois']:,} POIs)")
+            print(f"  {C.CYAN}{slug}{C.RESET}: {info['name']}")
+            print(f"    {C.DIM}{info['nodes']:,} nodes · {info['pois']:,} POIs · {info.get('places', 0):,} places{C.RESET}")
+        print()
         sys.exit(0)
     
     # Health check
@@ -326,12 +458,14 @@ Examples:
         if args.json:
             print(json.dumps(health, indent=2))
         else:
-            llm_status = "✓ Online" if health["llm_server"]["online"] else "✗ Offline"
-            print(f"LLM Server: {llm_status} ({health['llm_server']['url']})")
-            print(f"Locations: {health['locations_available']} available")
+            llm_status = f"{C.GREEN}✓ Online{C.RESET}" if health["llm_server"]["online"] else f"{C.RED}✗ Offline{C.RESET}"
+            print(f"\n{C.BOLD}{C.BLUE}💠 DreamMeridian{C.RESET} Health Check\n")
+            print(f"  LLM Server:  {llm_status}")
+            print(f"  Locations:   {health['locations_available']} available")
             if health["locations"]:
-                print(f"  {', '.join(health['locations'])}")
-            print(f"Current: {health['current_location'] or 'None loaded'}")
+                print(f"               {C.DIM}{', '.join(health['locations'])}{C.RESET}")
+            print(f"  Current:     {health['current_location'] or 'None loaded'}")
+            print()
         sys.exit(0)
     
     # Query
@@ -341,12 +475,14 @@ Examples:
     
     # Determine location
     location = args.location
+    locations = list_locations()
     if not location:
-        locations = list_locations()
         if not locations:
             print("Error: No locations found. Run build_location.py first.")
             sys.exit(1)
         location = list(locations.keys())[0]
+    
+    location_info = locations.get(location, {})
     
     # Execute query
     result = query(args.query, location=location, llm_url=args.llm_url)
@@ -354,8 +490,15 @@ Examples:
     # Output
     if args.json:
         print(json.dumps(result.to_dict(), indent=2))
+    elif args.simple:
+        print(format_result_simple(result))
     else:
-        print(format_result(result, verbose=args.verbose))
+        print()
+        print(format_result_rich(result, location_info))
+    
+    if args.verbose and not args.json:
+        print(f"\n{C.DIM}Raw JSON:{C.RESET}")
+        print(json.dumps(result.result, indent=2))
     
     sys.exit(0 if result.success else 1)
 
