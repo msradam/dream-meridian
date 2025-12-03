@@ -1,7 +1,27 @@
 [project]
 name = "dream-meridian"
 version = "0.1.0"
-description = "Add your description here"
+description = "Offline AI-powered spatial intelligence for ARM devices"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "duckdb>=0.9.0",
+    "networkit>=11.0",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "streamlit>=1.30.0",
+    "streamlit-folium>=0.18.0",
+    "folium>=0.15.0",
+    "numpy>=1.26.0",
+    "osmnx>=1.9.0",
+    "requests>=2.31.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+build = [
+    "huggingface-hub>=0.20.0",
+]
+
+[dependency-groups]
+dev = []
