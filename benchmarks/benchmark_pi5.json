@@ -1,0 +1,78 @@
+{
+  "device": "pi5",
+  "platform": "Linux-6.12.47+rpt-rpi-2712-aarch64-with-glibc2.41",
+  "processor": "",
+  "total_time": 84.88891267776489,
+  "mean_time": 8.488812947273255,
+  "results": [
+    {
+      "location": "coxs_bazar",
+      "query": "Find the nearest hospital to Camp 6",
+      "success": true,
+      "time": 7.784035682678223,
+      "tool": "find_nearest_poi_with_route"
+    },
+    {
+      "location": "coxs_bazar",
+      "query": "How do I walk from Camp 3 to Camp 9",
+      "success": true,
+      "time": 10.146005392074585,
+      "tool": "calculate_route"
+    },
+    {
+      "location": "coxs_bazar",
+      "query": "Show 15 minute walkable area from Camp 8W",
+      "success": true,
+      "time": 7.822697877883911,
+      "tool": "generate_isochrone"
+    },
+    {
+      "location": "san_juan",
+      "query": "Find the nearest clinic to Condado",
+      "success": true,
+      "time": 7.0734498500823975,
+      "tool": "find_nearest_poi_with_route"
+    },
+    {
+      "location": "san_juan",
+      "query": "Walking route from Santurce to Miramar",
+      "success": true,
+      "time": 10.795259237289429,
+      "tool": "calculate_route"
+    },
+    {
+      "location": "san_juan",
+      "query": "List pharmacies within 1km of Ocean Park",
+      "success": true,
+      "time": 8.28538990020752,
+      "tool": "list_pois"
+    },
+    {
+      "location": "jakarta",
+      "query": "Find nearest hospital to Menteng",
+      "success": true,
+      "time": 8.429099321365356,
+      "tool": "find_nearest_poi_with_route"
+    },
+    {
+      "location": "jakarta",
+      "query": "How far to walk from Gambir to Kemang",
+      "success": true,
+      "time": 8.160772800445557,
+      "tool": "generate_isochrone"
+    },
+    {
+      "location": "jakarta",
+      "query": "Schools within 2km of Gelora",
+      "success": true,
+      "time": 7.557260274887085,
+      "tool": "generate_isochrone"
+    },
+    {
+      "location": "coxs_bazar",
+      "query": "Clinics near Camp 10",
+      "success": true,
+      "time": 8.834159135818481,
+      "tool": "list_pois"
+    }
+  ]
