@@ -16,6 +16,7 @@ from datetime import timedelta
 
 # Import query engine
 import importlib.util
+
 spec = importlib.util.spec_from_file_location("dream_meridian", "dream-meridian.py")
 dm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(dm)
@@ -278,6 +279,7 @@ iframe {
 </style>
 """
 
+
 # ============================================================================
 # Hardware Information
 # ============================================================================
@@ -285,14 +287,18 @@ iframe {
 def get_static_hw_info() -> dict:
     """Get static hardware info (cached)."""
     info = {
-        "device": "Unknown", "device_short": "Unknown",
-        "os_name": "Unknown", "os_version": "",
-        "cpu_model": "", "cpu_cores": 0, "cpu_arch": platform.machine(),
+        "device": "Unknown",
+        "device_short": "Unknown",
+        "os_name": "Unknown",
+        "os_version": "",
+        "cpu_model": "",
+        "cpu_cores": 0,
+        "cpu_arch": platform.machine(),
         "mem_total_gb": 0,
         "kernel": "",
         "hostname": platform.node(),
     }
-    
+
     model_path = Path("/proc/device-tree/model")
     if model_path.exists():
         try:
@@ -302,18 +308,19 @@ def get_static_hw_info() -> dict:
             short = re.sub(r" Model ([A-Z])", r" \1", short)
             short = re.sub(r" Rev [\d.]+", "", short)
             info["device_short"] = short.strip()
-        except: pass
-    
+        except:
+            pass
+
     if Path("/boot/dietpi/.version").exists():
         try:
-            lines = Path("/boot/dietpi/.version").read_text().strip().split('\n')
+            lines = Path("/boot/dietpi/.version").read_text().strip().split("\n")
             v = {}
             for line in lines:
-                if '=' in line:
-                    k, val = line.split('=', 1)
+                if "=" in line:
+                    k, val = line.split("=", 1)
                     v[k] = val.strip("'\"")
-            core = v.get('G_DIETPI_VERSION_CORE', '')
-            sub = v.get('G_DIETPI_VERSION_SUB', '')
+            core = v.get("G_DIETPI_VERSION_CORE", "")
+            sub = v.get("G_DIETPI_VERSION_SUB", "")
             info["os_name"] = "DietPi"
             info["os_version"] = f"{core}.{sub}" if core else ""
         except:
@@ -326,8 +333,9 @@ def get_static_hw_info() -> dict:
                         info["os_name"] = line.split("=")[1].strip('"').title()
                     elif line.startswith("VERSION_ID="):
                         info["os_version"] = line.split("=")[1].strip('"')
-            except: pass
-    
+            except:
+                pass
+
     if Path("/proc/cpuinfo").exists():
         try:
             cpuinfo = Path("/proc/cpuinfo").read_text()
@@ -336,28 +344,34 @@ def get_static_hw_info() -> dict:
                     info["cpu_model"] = line.split(":")[1].strip()
                     break
             info["cpu_cores"] = cpuinfo.count("processor\t:")
-        except: pass
-    
+        except:
+            pass
+
     if not info["cpu_cores"]:
         info["cpu_cores"] = psutil.cpu_count(logical=True) or 0
-    
+
     info["mem_total_gb"] = psutil.virtual_memory().total / (1024**3)
     info["kernel"] = platform.release()
-    
+
     return info
+
 
 def get_dynamic_stats() -> dict:
     """Get dynamic system stats."""
     stats = {
-        "cpu_temp": None, "cpu_percent": 0, "cpu_freq": None,
-        "mem_percent": 0, "mem_used_gb": 0,
+        "cpu_temp": None,
+        "cpu_percent": 0,
+        "cpu_freq": None,
+        "mem_percent": 0,
+        "mem_used_gb": 0,
         "disk_percent": 0,
         "uptime": "",
     }
-    
+
     try:
-        result = subprocess.run(["vcgencmd", "measure_temp"],
-                              capture_output=True, text=True, timeout=2)
+        result = subprocess.run(
+            ["vcgencmd", "measure_temp"], capture_output=True, text=True, timeout=2
+        )
         if result.returncode == 0:
             stats["cpu_temp"] = float(result.stdout.split("=")[1].replace("'C", ""))
     except:
@@ -365,23 +379,26 @@ def get_dynamic_stats() -> dict:
             temp = Path("/sys/class/thermal/thermal_zone0/temp")
             if temp.exists():
                 stats["cpu_temp"] = int(temp.read_text().strip()) / 1000
-        except: pass
-    
+        except:
+            pass
+
     stats["cpu_percent"] = psutil.cpu_percent(interval=0.1)
     try:
         freq = psutil.cpu_freq()
         if freq:
             stats["cpu_freq"] = freq.current
-    except: pass
-    
+    except:
+        pass
+
     mem = psutil.virtual_memory()
     stats["mem_percent"] = mem.percent
     stats["mem_used_gb"] = mem.used / (1024**3)
-    
+
     try:
         stats["disk_percent"] = psutil.disk_usage("/").percent
-    except: pass
-    
+    except:
+        pass
+
     try:
         uptime_sec = float(Path("/proc/uptime").read_text().split()[0])
         td = timedelta(seconds=int(uptime_sec))
@@ -391,28 +408,40 @@ def get_dynamic_stats() -> dict:
             h, rem = divmod(td.seconds, 3600)
             m = rem // 60
             stats["uptime"] = f"{h}h {m}m"
-    except: pass
-    
+    except:
+        pass
+
     return stats
+
 
 def get_llm_status() -> dict:
     """Check LLM server status."""
     import requests
+
     status = {"online": False, "model": None, "backend": "CPU"}
-    
+
     try:
-        health = requests.get(LLAMA_URL.replace('/v1/chat/completions', '/health'), timeout=2)
+        health = requests.get(
+            LLAMA_URL.replace("/v1/chat/completions", "/health"), timeout=2
+        )
         status["online"] = health.status_code == 200
-        
+
         try:
-            props = requests.get(LLAMA_URL.replace('/v1/chat/completions', '/props'), timeout=2)
+            props = requests.get(
+                LLAMA_URL.replace("/v1/chat/completions", "/props"), timeout=2
+            )
             if props.status_code == 200:
                 data = props.json()
-                status["model"] = data.get("model_alias") or data.get("model", "").split("/")[-1]
-        except: pass
-    except: pass
-    
+                status["model"] = (
+                    data.get("model_alias") or data.get("model", "").split("/")[-1]
+                )
+        except:
+            pass
+    except:
+        pass
+
     return status
+
 
 # ============================================================================
 # Location Discovery
@@ -431,14 +460,19 @@ def discover_locations() -> dict:
                     "nodes": cfg.get("nodes", 0),
                     "pois": cfg.get("pois", 0),
                     "places": cfg.get("places", 0),
-                    "examples": cfg.get("examples", [
-                        "Find hospitals nearby",
-                        "Schools within 1km",
-                        "15 min walkable area"
-                    ])
+                    "examples": cfg.get(
+                        "examples",
+                        [
+                            "Find hospitals nearby",
+                            "Schools within 1km",
+                            "15 min walkable area",
+                        ],
+                    ),
                 }
-        except: continue
+        except:
+            continue
     return locations
+
 
 # ============================================================================
 # UI Components
@@ -449,7 +483,7 @@ def render_system_panel():
     hw = get_static_hw_info()
     stats = get_dynamic_stats()
     llm = get_llm_status()
-    
+
     # Temp color class
     temp_class = "temp"
     if stats["cpu_temp"]:
@@ -457,9 +491,10 @@ def render_system_panel():
             temp_class = "temp-hot"
         elif stats["cpu_temp"] > 55:
             temp_class = "temp-warm"
-    
+
     # System card
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div class="system-card">
         <div class="system-header">
             <div>
@@ -487,114 +522,162 @@ def render_system_panel():
             </div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # LLM Status
     if llm["online"]:
         model_text = f" · {llm['model']}" if llm["model"] else ""
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div class="llm-status llm-online">
             <div class="llm-dot"></div>
             LLM Online{model_text}
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
     else:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="llm-status llm-offline">
             <div class="llm-dot"></div>
             LLM Offline
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
+
 
 # ============================================================================
 # Map Rendering
 # ============================================================================
 POI_COLORS = {
-    "hospital": "red", "clinic": "red", "doctors": "red",
-    "pharmacy": "green", "school": "blue", "university": "blue",
-    "shelter": "orange", "police": "darkblue", "fire_station": "red",
-    "bank": "purple", "atm": "purple",
+    "hospital": "red",
+    "clinic": "red",
+    "doctors": "red",
+    "pharmacy": "green",
+    "school": "blue",
+    "university": "blue",
+    "shelter": "orange",
+    "police": "darkblue",
+    "fire_station": "red",
+    "bank": "purple",
+    "atm": "purple",
 }
+
 
 def create_map(result, location: dict) -> folium.Map:
     """Create Folium map with results."""
-    m = folium.Map(location=location["center"], zoom_start=13, tiles="cartodbdark_matter")
-    
+    m = folium.Map(
+        location=location["center"], zoom_start=13, tiles="cartodbdark_matter"
+    )
+
     if not result or not result.success:
         return m
-    
+
     for place, info in result.geocoded.items():
         folium.CircleMarker(
-            [info['lat'], info['lon']], radius=8,
-            color='#fbbf24', fill=True, fillColor='#fbbf24', fillOpacity=0.9,
-            popup=f"📍 {place}"
+            [info["lat"], info["lon"]],
+            radius=8,
+            color="#fbbf24",
+            fill=True,
+            fillColor="#fbbf24",
+            fillOpacity=0.9,
+            popup=f"📍 {place}",
         ).add_to(m)
-    
+
     data = result.result
     tool = result.tool_name
     poi_type = data.get("poi_type", "location")
     color = POI_COLORS.get(poi_type, "gray")
-    
+
     if tool == "list_pois":
         pois = data.get("pois", [])
         for poi in pois:
-            name = poi.get('name') or f"Unnamed {poi_type}"
+            name = poi.get("name") or f"Unnamed {poi_type}"
             popup = f"<b>{name}</b><br>📏 {poi.get('distance_m', 0):.0f}m"
-            folium.Marker([poi['lat'], poi['lon']], popup=popup,
-                         icon=folium.Icon(color=color, icon="info-sign")).add_to(m)
-    
+            folium.Marker(
+                [poi["lat"], poi["lon"]],
+                popup=popup,
+                icon=folium.Icon(color=color, icon="info-sign"),
+            ).add_to(m)
+
     elif tool == "find_nearest_poi_with_route":
         pois = data.get("nearest_pois", [])
         path = data.get("path", [])
-        
+
         if path:
             coords = [[p["lat"], p["lon"]] for p in path]
             folium.PolyLine(coords, weight=4, color="#3b82f6", opacity=0.7).add_to(m)
             if "start" in data:
-                folium.Marker([data["start"]["lat"], data["start"]["lon"]],
-                             icon=folium.Icon(color="green", icon="play"), popup="Start").add_to(m)
-        
+                folium.Marker(
+                    [data["start"]["lat"], data["start"]["lon"]],
+                    icon=folium.Icon(color="green", icon="play"),
+                    popup="Start",
+                ).add_to(m)
+
         for i, poi in enumerate(pois):
-            name = poi.get('name') or f"Unnamed"
+            name = poi.get("name") or f"Unnamed"
             popup = f"<b>{name}</b><br>🚶 {poi['walk_minutes']:.0f} min"
             mc = color if i == 0 else "lightgray"
-            folium.Marker([poi['lat'], poi['lon']], popup=popup,
-                         icon=folium.Icon(color=mc, icon="info-sign")).add_to(m)
-    
+            folium.Marker(
+                [poi["lat"], poi["lon"]],
+                popup=popup,
+                icon=folium.Icon(color=mc, icon="info-sign"),
+            ).add_to(m)
+
     elif tool in ["calculate_route", "find_along_route"]:
         path = data.get("path", [])
         if path:
             coords = [[p["lat"], p["lon"]] for p in path]
             folium.PolyLine(coords, weight=4, color="#3b82f6", opacity=0.8).add_to(m)
-            folium.Marker(coords[0], icon=folium.Icon(color="green", icon="play")).add_to(m)
-            folium.Marker(coords[-1], icon=folium.Icon(color="red", icon="stop")).add_to(m)
+            folium.Marker(
+                coords[0], icon=folium.Icon(color="green", icon="play")
+            ).add_to(m)
+            folium.Marker(
+                coords[-1], icon=folium.Icon(color="red", icon="stop")
+            ).add_to(m)
         for poi in data.get("pois", []):
-            folium.Marker([poi['lat'], poi['lon']], popup=poi.get('name'),
-                         icon=folium.Icon(color="orange")).add_to(m)
-    
+            folium.Marker(
+                [poi["lat"], poi["lon"]],
+                popup=poi.get("name"),
+                icon=folium.Icon(color="orange"),
+            ).add_to(m)
+
     elif tool == "generate_isochrone":
         import math
+
         boundary = data.get("boundary_points", [])
         args = result.tool_args
         cx = args.get("lat") or args.get("start_lat")
         cy = args.get("lon") or args.get("start_lon")
         if boundary and cx and cy:
-            boundary.sort(key=lambda p: math.atan2(p["lat"]-cx, p["lon"]-cy))
+            boundary.sort(key=lambda p: math.atan2(p["lat"] - cx, p["lon"] - cy))
             coords = [[p["lat"], p["lon"]] for p in boundary]
-            folium.Polygon(coords, color="#a855f7", fill=True, fillOpacity=0.2).add_to(m)
-            folium.Marker([cx, cy], icon=folium.Icon(color="purple", icon="user")).add_to(m)
-    
+            folium.Polygon(coords, color="#a855f7", fill=True, fillOpacity=0.2).add_to(
+                m
+            )
+            folium.Marker(
+                [cx, cy], icon=folium.Icon(color="purple", icon="user")
+            ).add_to(m)
+
     # Fit bounds
-    points = [[i['lat'], i['lon']] for i in result.geocoded.values()]
-    points += [[p['lat'], p['lon']] for p in data.get("nearest_pois", []) + data.get("pois", [])]
-    points += [[p['lat'], p['lon']] for p in data.get("path", [])]
-    points += [[p['lat'], p['lon']] for p in data.get("boundary_points", [])]
+    points = [[i["lat"], i["lon"]] for i in result.geocoded.values()]
+    points += [
+        [p["lat"], p["lon"]]
+        for p in data.get("nearest_pois", []) + data.get("pois", [])
+    ]
+    points += [[p["lat"], p["lon"]] for p in data.get("path", [])]
+    points += [[p["lat"], p["lon"]] for p in data.get("boundary_points", [])]
     if "start" in data:
         points.append([data["start"]["lat"], data["start"]["lon"]])
     if len(points) >= 2:
         m.fit_bounds(points, padding=[30, 30])
-    
+
     return m
+
 
 # ============================================================================
 # Main Application
@@ -602,145 +685,170 @@ def create_map(result, location: dict) -> folium.Map:
 def main():
     st.set_page_config(page_title="DreamMeridian", page_icon="💠", layout="wide")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-    
+
     locations = discover_locations()
     if not locations:
         st.error("No locations found. Run `python build_location.py` first.")
         return
-    
+
     if "result" not in st.session_state:
         st.session_state.result = None
     if "current_location" not in st.session_state:
         st.session_state.current_location = list(locations.keys())[0]
     if "query_text" not in st.session_state:
         st.session_state.query_text = ""
-    
+
     # ===== SIDEBAR =====
     with st.sidebar:
         st.selectbox(
-            "Location", options=list(locations.keys()),
+            "Location",
+            options=list(locations.keys()),
             format_func=lambda x: locations[x]["name"],
-            key="location_select"
+            key="location_select",
         )
         selected = st.session_state.location_select
-        
+
         if selected != st.session_state.current_location:
             st.session_state.current_location = selected
             st.session_state.result = None
             st.session_state.query_text = ""
             st.rerun()
-        
+
         loc = locations[selected]
         st.caption(f"{loc['nodes']:,} nodes · {loc['pois']:,} POIs")
-        
+
         st.divider()
-        
+
         render_system_panel()
-        
+
         st.divider()
-        
-        st.markdown('<div class="section-header">Try asking</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="section-header">Try asking</div>', unsafe_allow_html=True
+        )
         for i, ex in enumerate(loc.get("examples", [])[:4]):
             if st.button(ex, key=f"ex_{i}", use_container_width=True):
                 st.session_state.query_text = ex
                 st.rerun()
-    
+
     # ===== MAIN CONTENT =====
     loc = locations[selected]
-    
+
     # Header row
     col_h1, col_h2 = st.columns([3, 2])
     with col_h1:
         st.markdown(f"## 💠 DreamMeridian")
         st.caption(f"Offline spatial intelligence for **{loc['name']}**")
     with col_h2:
-        st.markdown("""
+        st.markdown(
+            """
         <div class="info-row" style="justify-content: flex-end; margin-top: 0.5rem;">
             <span>🧠 xLAM-2-1B</span>
             <span>🗄️ DuckDB</span>
             <span>🛤️ NetworKit</span>
         </div>
-        """, unsafe_allow_html=True)
-    
+        """,
+            unsafe_allow_html=True,
+        )
+
     # Query input
     query = st.text_input(
         "Query",
         value=st.session_state.query_text,
         placeholder=f"Ask about {loc['name'].split(',')[0]}...",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
     st.session_state.query_text = query
-    
+
     if st.button("Query", type="primary", disabled=not query):
         with st.spinner("Processing..."):
             result = dm.query(query, location=selected)
             st.session_state.result = result
             if not result.success:
                 st.error(result.error)
-    
+
     # Map (full width)
     map_obj = create_map(st.session_state.result, loc)
     st_folium(map_obj, height=450, use_container_width=True)
-    
+
     # Results (below map)
     result = st.session_state.result
-    
+
     if result and result.success:
         col_r1, col_r2, col_r3 = st.columns([1, 1, 2])
-        
+
         with col_r1:
             st.metric("Query Time", f"{result.query_time:.2f}s")
-            
+
             if result.geocoded:
-                st.markdown('<div class="section-header">Geocoded</div>', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="section-header">Geocoded</div>', unsafe_allow_html=True
+                )
                 for place, info in result.geocoded.items():
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div class="geo-badge">📍 {place}</div>
                     <div class="geo-coords">{info['lat']:.4f}, {info['lon']:.4f}</div>
-                    """, unsafe_allow_html=True)
-        
+                    """,
+                        unsafe_allow_html=True,
+                    )
+
         with col_r2:
-            st.markdown('<div class="section-header">Tool</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="section-header">Tool</div>', unsafe_allow_html=True
+            )
             st.code(result.tool_name, language=None)
-            
+
             data = result.result
-            
+
             if "error" in data:
                 st.error(data["error"])
-            
+
             if "count" in data:
-                poi_label = data.get('poi_type', 'POIs').replace('_', ' ').title()
-                st.metric(poi_label, data['count'])
-            
+                poi_label = data.get("poi_type", "POIs").replace("_", " ").title()
+                st.metric(poi_label, data["count"])
+
             if "distance_km" in data and "pois_found" not in data:
-                st.metric("Route", f"{data['distance_km']:.1f} km · {int(data['walk_minutes'])} min")
-            
+                st.metric(
+                    "Route",
+                    f"{data['distance_km']:.1f} km · {int(data['walk_minutes'])} min",
+                )
+
             if "reachable_nodes" in data:
-                st.metric(f"Reachable ({data['max_minutes']}m)", f"{data['reachable_nodes']:,}")
-        
+                st.metric(
+                    f"Reachable ({data['max_minutes']}m)",
+                    f"{data['reachable_nodes']:,}",
+                )
+
         with col_r3:
             data = result.result
             pois = data.get("nearest_pois") or data.get("pois", [])
             if pois:
-                st.markdown('<div class="section-header">Results</div>', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="section-header">Results</div>', unsafe_allow_html=True
+                )
                 for poi in pois[:6]:
-                    name = poi.get('name') or "Unnamed"
+                    name = poi.get("name") or "Unnamed"
                     detail = ""
                     if "walk_minutes" in poi:
                         detail = f"· {poi['walk_minutes']:.0f} min"
                     elif "distance_m" in poi:
                         detail = f"· {poi['distance_m']:.0f}m"
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div class="result-item">
                         <span class="result-name">{name}</span>
                         <span class="result-detail">{detail}</span>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                        unsafe_allow_html=True,
+                    )
                 if len(pois) > 6:
                     st.caption(f"+{len(pois)-6} more")
-            
+
             if st.checkbox("Show JSON", value=False):
                 st.json(data)
+
 
 if __name__ == "__main__":
     main()
