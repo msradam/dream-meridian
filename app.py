@@ -300,6 +300,7 @@ def get_static_hw_info() -> dict:
         "hostname": platform.node(),
     }
 
+    # Check for Raspberry Pi
     model_path = Path("/proc/device-tree/model")
     if model_path.exists():
         try:
@@ -311,7 +312,23 @@ def get_static_hw_info() -> dict:
             info["device_short"] = short.strip()
         except:
             pass
+    elif platform.system() == "Darwin":
+        # macOS - detect Apple Silicon
+        try:
+            result = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            if result.returncode == 0:
+                info["cpu_model"] = result.stdout.strip()
+                info["device"] = "Apple Silicon Mac"
+                info["device_short"] = "Mac"
+        except:
+            info["device_short"] = "Mac"
 
+    # OS detection
     if Path("/boot/dietpi/.version").exists():
         try:
             lines = Path("/boot/dietpi/.version").read_text().strip().split("\n")
@@ -326,17 +343,20 @@ def get_static_hw_info() -> dict:
             info["os_version"] = f"{core}.{sub}" if core else ""
         except:
             info["os_name"] = "DietPi"
-    else:
-        if Path("/etc/os-release").exists():
-            try:
-                for line in Path("/etc/os-release").read_text().split("\n"):
-                    if line.startswith("ID="):
-                        info["os_name"] = line.split("=")[1].strip('"').title()
-                    elif line.startswith("VERSION_ID="):
-                        info["os_version"] = line.split("=")[1].strip('"')
-            except:
-                pass
+    elif platform.system() == "Darwin":
+        info["os_name"] = "macOS"
+        info["os_version"] = platform.mac_ver()[0]
+    elif Path("/etc/os-release").exists():
+        try:
+            for line in Path("/etc/os-release").read_text().split("\n"):
+                if line.startswith("ID="):
+                    info["os_name"] = line.split("=")[1].strip('"').title()
+                elif line.startswith("VERSION_ID="):
+                    info["os_version"] = line.split("=")[1].strip('"')
+        except:
+            pass
 
+    # CPU info
     if Path("/proc/cpuinfo").exists():
         try:
             cpuinfo = Path("/proc/cpuinfo").read_text()
@@ -369,6 +389,7 @@ def get_dynamic_stats() -> dict:
         "uptime": "",
     }
 
+    # Temperature - Pi specific
     try:
         result = subprocess.run(
             ["vcgencmd", "measure_temp"], capture_output=True, text=True, timeout=2
@@ -400,8 +421,30 @@ def get_dynamic_stats() -> dict:
     except:
         pass
 
+    # Uptime
     try:
-        uptime_sec = float(Path("/proc/uptime").read_text().split()[0])
+        if Path("/proc/uptime").exists():
+            uptime_sec = float(Path("/proc/uptime").read_text().split()[0])
+        else:
+            # macOS fallback
+            result = subprocess.run(
+                ["sysctl", "-n", "kern.boottime"],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            if result.returncode == 0:
+                import time
+                # Parse "{ sec = 1234567890, usec = 0 }"
+                match = re.search(r"sec\s*=\s*(\d+)", result.stdout)
+                if match:
+                    boot_time = int(match.group(1))
+                    uptime_sec = time.time() - boot_time
+                else:
+                    uptime_sec = 0
+            else:
+                uptime_sec = 0
+
         td = timedelta(seconds=int(uptime_sec))
         if td.days > 0:
             stats["uptime"] = f"{td.days}d {td.seconds // 3600}h"
@@ -410,7 +453,7 @@ def get_dynamic_stats() -> dict:
             m = rem // 60
             stats["uptime"] = f"{h}h {m}m"
     except:
-        pass
+        stats["uptime"] = "—"
 
     return stats
 
@@ -485,13 +528,19 @@ def render_system_panel():
     stats = get_dynamic_stats()
     llm = get_llm_status()
 
-    # Temp color class
+    # Temp color class and display value
     temp_class = "temp"
-    if stats["cpu_temp"]:
+    if stats["cpu_temp"] is not None:
         if stats["cpu_temp"] > 70:
             temp_class = "temp-hot"
         elif stats["cpu_temp"] > 55:
             temp_class = "temp-warm"
+        temp_display = f"{stats['cpu_temp']:.0f}°"
+    else:
+        temp_display = "—"
+
+    # Uptime display
+    uptime_display = stats["uptime"] if stats["uptime"] else "—"
 
     # System card
     st.markdown(
@@ -502,11 +551,11 @@ def render_system_panel():
                 <div class="system-device">{hw['device_short']}</div>
                 <div class="system-os">{hw['os_name']} {hw['os_version']} · {hw['cpu_arch']} · {hw['cpu_cores']} cores</div>
             </div>
-            <div class="system-uptime">⏱ {stats['uptime']}</div>
+            <div class="system-uptime">⏱ {uptime_display}</div>
         </div>
         <div class="stats-row">
             <div class="stat-box">
-                <div class="stat-value {temp_class}">{stats['cpu_temp']:.0f}°</div>
+                <div class="stat-value {temp_class}">{temp_display}</div>
                 <div class="stat-label">Temp</div>
             </div>
             <div class="stat-box">
