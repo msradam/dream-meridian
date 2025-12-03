@@ -5,3 +5,4 @@ backup/
 llama.cpp/
 models/
 *.graphml
+slides/
