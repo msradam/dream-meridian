@@ -17,8 +17,8 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 - **100% Offline**: All AI inference runs locally on ARM CPU—no cloud, no API keys
 - **Natural Language Queries**: Ask questions like "Find hospitals near Camp 6" or "Show 15 minute walkable area from Condado"
 - **Real Routing**: Actual walking routes calculated on road network graphs (not straight-line distances)
-- **Multiple Locations**: Pre-built datasets for Cox's Bazar (refugee camps) and San Juan (disaster response)
-- **Sub-10 Second Response**: Optimized for Raspberry Pi 5 with ARM NEON/dotprod instructions
+- **Three Disaster Response Scenarios**: Pre-built datasets for Cox's Bazar, San Juan, and Jakarta
+- **Sub-15 Second Response**: Optimized for Raspberry Pi 5 with ARM NEON/dotprod instructions
 
 ---
 
@@ -51,18 +51,32 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 ┌──────────────────────────┐    ┌──────────────────────────────────┐
 │  DuckDB + Spatial        │    │  NetworKit Graph Engine          │
 │  POI queries, geocoding  │    │  Dijkstra routing on road network│
-│  ~6K-11K POIs per city   │    │  ~25K-28K nodes per city         │
+│  ~6K-41K POIs per city   │    │  ~25K-208K nodes per city        │
 └──────────────────────────┘    └──────────────────────────────────┘
 ```
+
+---
+
+## 📍 Pre-Built Datasets
+
+Three disaster response scenarios with pre-built offline data:
+
+| Location | Context | Nodes | Edges | POIs | Place Names |
+|----------|---------|-------|-------|------|-------------|
+| `coxs_bazar` | Rohingya refugee camps, Bangladesh | 27,551 | 71,530 | 6,509 | 464 |
+| `san_juan` | Hurricane response, Puerto Rico | 24,602 | 61,055 | 11,351 | 405 |
+| `jakarta` | Urban flood response, Indonesia | 208,281 | 508,954 | 41,028 | 331 |
+
+Data sourced from [OpenStreetMap](https://www.openstreetmap.org/) via OSMnx. Includes hospitals, clinics, pharmacies, schools, shelters, banks, markets, fuel stations, police stations, and places of worship.
 
 ---
 
 ## 📋 Requirements
 
 ### Hardware
-- **Raspberry Pi 5** (4GB+ RAM recommended) or any ARM64 device
-- ~3GB storage for models and data
-- Tested on: Pi 5 8GB running DietPi/Raspberry Pi OS
+- **Raspberry Pi 5** (8GB+ RAM recommended) or any ARM64 device
+- ~4GB storage for models and data
+- Tested on: Pi 5 16GB running DietPi
 
 ### Software Prerequisites
 ```bash
@@ -90,11 +104,8 @@ cd dream-meridian
 uv sync
 ```
 
-This creates a virtual environment and installs all dependencies in seconds.
-
 ### 3. Build llama.cpp (ARM-Optimized)
 ```bash
-# Clone llama.cpp
 git clone https://github.com/ggerganov/llama.cpp.git
 cd llama.cpp && mkdir build && cd build
 
@@ -107,10 +118,7 @@ cmake .. \
     -DGGML_LTO=ON \
     -DLLAMA_CURL=OFF
 
-# Build (takes ~10 minutes on Pi 5)
 cmake --build . -j4 --config Release
-
-# Return to project root
 cd ../..
 ```
 
@@ -118,8 +126,7 @@ cd ../..
 ```bash
 mkdir -p models
 
-# Download xLAM-2-1B quantized model (~1.1GB)
-uv run --with huggingface-hub hf download \
+uv run --with huggingface-hub huggingface-cli download \
     Salesforce/xLAM-2-1b-fc-r-gguf \
     xLAM-2-1B-fc-r-Q5_K_M.gguf \
     --local-dir ./models
@@ -127,17 +134,16 @@ uv run --with huggingface-hub hf download \
 
 ### 5. Verify Installation
 ```bash
-# Check all components
 ls -la llama.cpp/build/bin/llama-server  # Should exist
 ls -la models/*.gguf                      # Should show ~1.1GB file
-ls -la data/                              # Should show coxs_bazar, san_juan, dhaka
+ls -la data/                              # Should show coxs_bazar, san_juan, jakarta
 ```
 
 ---
 
 ## 🎮 Running DreamMeridian
 
-### Start the LLM Server
+### Start the LLM Server (Terminal 1)
 ```bash
 ./llama.cpp/build/bin/llama-server \
     -m ./models/xLAM-2-1B-fc-r-Q5_K_M.gguf \
@@ -146,76 +152,97 @@ ls -la data/                              # Should show coxs_bazar, san_juan, dh
     --host 0.0.0.0 --port 8080
 ```
 
-Wait for "server is listening on http://0.0.0.0:8080" message.
+Wait for "server is listening on http://0.0.0.0:8080".
 
-### Option A: Command Line Interface
+### Command Line Interface (Terminal 2)
 ```bash
-# Basic query
-uv run python dream-meridian.py -l coxs_bazar "Find hospitals near Camp 6"
-
-# Different location
-uv run python dream-meridian.py -l san_juan "Find shelters near Condado"
-
-# With explicit coordinates
-uv run python dream-meridian.py -l coxs_bazar "Find clinics within 1km of latitude 21.2 longitude 92.16"
+uv run python dream-meridian.py -l <location> "<query>"
 ```
 
-### Option B: Streamlit Dashboard
+### Streamlit Dashboard (Terminal 2)
 ```bash
 uv run streamlit run app.py --server.port 8501
 ```
 
-Then open http://[pi-ip-address]:8501 in your browser.
+Open http://[pi-ip-address]:8501 in your browser.
 
 ---
 
-## 📍 Available Locations
+## 💬 Recommended Queries
 
-| Location | Context | Nodes | POIs | Key Features |
-|----------|---------|-------|------|--------------|
-| `coxs_bazar` | Rohingya refugee camps | 27,551 | 6,509 | Camp 1-20, MSF clinics, NGO offices |
-| `san_juan` | Hurricane disaster response | 24,602 | 11,351 | Shelters, hospitals, coastal areas |
-| `dhaka` | Urban navigation | 89,000+ | 14,000+ | Dense city center |
+### Cox's Bazar, Bangladesh (Rohingya Refugee Camps)
+```bash
+# Find nearest medical facility
+uv run python dream-meridian.py -l coxs_bazar "I need to find the nearest hospital to Camp 6"
+
+# Calculate walking route between camps
+uv run python dream-meridian.py -l coxs_bazar "How do I walk from Camp 3 to Camp 8W"
+
+# Analyze walkable area
+uv run python dream-meridian.py -l coxs_bazar "Show me everywhere I can walk to in 15 minutes from Camp 8W"
+```
+
+### San Juan, Puerto Rico (Hurricane Response)
+```bash
+# Find nearest hospital
+uv run python dream-meridian.py -l san_juan "Where is the closest hospital to Condado"
+
+# Get walking directions
+uv run python dream-meridian.py -l san_juan "How do I get from Condado to Santurce on foot"
+
+# Analyze evacuation radius
+uv run python dream-meridian.py -l san_juan "Show me a 20 minute walking radius from Condado"
+```
+
+### Jakarta, Indonesia (Urban Flood Response)
+```bash
+# Find nearest bank
+uv run python dream-meridian.py -l jakarta "Is there a bank near Gelora"
+
+# Calculate walking distance
+uv run python dream-meridian.py -l jakarta "What is the distance on foot from Pinangsia to Kalianyar"
+
+# Analyze reachable area
+uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walking from Serdang"
+```
 
 ---
 
-## 💬 Example Queries
+## ⚡ Benchmark Results
 
-### Cox's Bazar (Humanitarian)
+Full benchmark suite of 30 natural language queries across all three locations.
+
+**Run the benchmark:**
 ```bash
-# Find medical facilities
-"Find hospitals near Camp 6"
-"Where is the closest clinic to Camp 8W"
-"List pharmacies within 2km of Camp 5"
-
-# Navigation
-"Calculate walking route from Camp 6 to Camp 9"
-"How far is it to walk from Camp 3 to Camp 10"
-
-# Accessibility analysis
-"Show 15 minute walkable area from Camp 6"
-"What areas can I reach in 10 minutes from Camp 8E"
-
-# Route planning
-"Find hospitals along the route from Camp 5 to Camp 9"
-"What clinics are on the way from Camp 6 to Camp 7"
+./benchmark_full.sh
 ```
 
-### San Juan (Disaster Response)
-```bash
-# Emergency services
-"Find nearest hospital to Condado"
-"Where is the closest shelter to Ocean Park"
-"List police stations near Santurce"
+### Summary (Raspberry Pi 5, 16GB RAM)
 
-# Evacuation planning
-"Calculate walking route from Condado to Santurce"
-"Find shelters along route from Ocean Park to Miramar"
+| Metric | Value |
+|--------|-------|
+| Total queries | 30 |
+| Successful | 29 |
+| Success rate | 97% |
+| Avg response time | 10.8s |
+| Min response time | 8.1s |
+| Max response time | 14.0s |
 
-# Coverage analysis
-"Show 10 minute walkable area from Puerta de Tierra"
-"What medical facilities are within 2km of Condado"
-```
+### Results by Location
+
+| Location | Queries | Success | Avg Time |
+|----------|---------|---------|----------|
+| Cox's Bazar | 10 | 100% | 10.2s |
+| San Juan | 10 | 100% | 10.8s |
+| Jakarta | 10 | 90% | 11.0s |
+
+### LLM Performance
+
+| Metric | Value |
+|--------|-------|
+| Inference speed | 8.7-10.3 tok/s |
+| Prompt tokens | 203-231 |
+| Completion tokens | 49-73 |
 
 ---
 
@@ -232,27 +259,6 @@ Then open http://[pi-ip-address]:8501 in your browser.
 
 ---
 
-## ⚡ Performance
-
-Tested on Raspberry Pi 5 (8GB RAM, DietPi OS):
-
-| Metric | Value |
-|--------|-------|
-| Model load time | ~8 seconds |
-| Query response (cold) | 5-10 seconds |
-| Query response (warm) | 3-6 seconds |
-| Memory usage | ~1.4 GB |
-| CPU utilization | 4 cores @ 100% during inference |
-
-ARM optimizations enabled:
-- NEON SIMD ✓
-- ARM FMA ✓
-- FP16 vector arithmetic ✓
-- Dot product instructions ✓
-- Flash Attention ✓
-
----
-
 ## 📁 Project Structure
 ```
 dream-meridian/
@@ -260,12 +266,14 @@ dream-meridian/
 ├── spatial_tools.py       # Spatial query functions
 ├── geocode_layer.py       # Place name resolution
 ├── app.py                 # Streamlit dashboard
+├── build_location.py      # Dataset builder
 ├── tool_grammar.gbnf      # GBNF grammar for tool calls
-├── pyproject.toml         # Python dependencies (uv)
+├── benchmark_full.sh      # 30-query benchmark suite
+├── pyproject.toml         # Python dependencies
 ├── data/
-│   ├── coxs_bazar/        # Cox's Bazar dataset
-│   ├── san_juan/          # San Juan dataset
-│   └── dhaka/             # Dhaka dataset
+│   ├── coxs_bazar/        # Cox's Bazar dataset (27K nodes, 6K POIs)
+│   ├── san_juan/          # San Juan dataset (24K nodes, 11K POIs)
+│   └── jakarta/           # Jakarta dataset (208K nodes, 41K POIs)
 ├── models/                # LLM models (gitignored)
 └── llama.cpp/             # Built llama.cpp (gitignored)
 ```
@@ -276,51 +284,34 @@ dream-meridian/
 
 ### LLM server won't start
 ```bash
-# Check if port is in use
-lsof -i :8080
-
-# Kill existing process
-pkill -f llama-server
+lsof -i :8080        # Check if port is in use
+pkill -f llama-server  # Kill existing process
 ```
 
 ### Out of memory
 ```bash
-# Reduce context size
+# Reduce context size to 1024
 ./llama.cpp/build/bin/llama-server \
     -m ./models/xLAM-2-1B-fc-r-Q5_K_M.gguf \
-    -c 1024 -t 4 \  # Reduced from 2048
-    --host 0.0.0.0 --port 8080
+    -c 1024 -t 4 --host 0.0.0.0 --port 8080
 ```
 
 ### Slow queries
 ```bash
-# Ensure mlock is enabled (keeps model in RAM)
-# Add --mlock flag to server command
-
-# Check CPU governor
+# Ensure CPU governor is set to performance
 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 # Should be "performance" not "powersave"
-```
-
-### Place name not found
-```bash
-# Check available places
-uv run python -c "
-import duckdb
-con = duckdb.connect('data/coxs_bazar/coxs_bazar.duckdb')
-print(con.execute('SELECT name FROM places LIMIT 20').fetchall())
-"
 ```
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **xLAM-2** by Salesforce AI Research - Tool-calling LLM
-- **llama.cpp** by Georgi Gerganov - Efficient inference engine
-- **NetworKit** - High-performance graph algorithms
-- **DuckDB** - Embedded analytical database
-- **OpenStreetMap** - Geographic data
+- **[xLAM-2](https://github.com/SalesforceAIResearch/xLAM)** by Salesforce AI Research - Tool-calling LLM
+- **[llama.cpp](https://github.com/ggerganov/llama.cpp)** by Georgi Gerganov - Efficient inference engine
+- **[NetworKit](https://networkit.github.io/)** - High-performance graph algorithms
+- **[DuckDB](https://duckdb.org/)** - Embedded analytical database
+- **[OpenStreetMap](https://www.openstreetmap.org/)** - Geographic data
 
 ---
 
@@ -332,6 +323,6 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## 🏆 ARM AI Developer Challenge 2025
 
-This project was built for the [ARM AI Developer Challenge](https://arm.devpost.com), demonstrating on-device AI inference for humanitarian applications on ARM-powered mobile devices.
+This project was built for the [ARM AI Developer Challenge](https://arm.devpost.com), demonstrating on-device AI inference for humanitarian applications on ARM-powered devices.
 
-**Key Innovation**: Natural language spatial queries running entirely offline on a $80 single-board computer, enabling field workers in connectivity-constrained environments to access critical geographic intelligence.
+**Key Innovation**: Natural language spatial queries running entirely offline on a ~$210 single-board computer, enabling field workers in connectivity-constrained environments to access critical geographic intelligence.
