@@ -195,26 +195,25 @@ uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walki
 
 ## ⚡ Benchmark Results
 
-Full benchmark suite of 57 natural language queries across all three locations.
+Full benchmark suite of 60 natural language queries across all three locations.
 ```bash
 ./benchmark_full.sh
 ```
 
 | Metric | Value |
 |--------|-------|
-| Total queries | 57 |
-| Success rate | **94.7%** |
+| Total queries | 60 |
+| Success rate | **95.0%** |
 | Avg response time | 10.87s |
 | LLM inference | 8.9 tok/s |
 
 | Location | Success |
 |----------|---------|
-| Cox's Bazar | 100% |
-| San Juan | 94.7% |
-| Jakarta | 89.5% |
+| Cox's Bazar | 95% (19/20) |
+| San Juan | 95% (19/20) |
+| Jakarta | 95% (19/20) |
 
 See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, failure analysis, and improvement pathways.
-
 ---
 
 ## 🔧 Spatial Tools
