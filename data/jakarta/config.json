@@ -1,0 +1,19 @@
+{
+  "slug": "jakarta",
+  "name": "Jakarta, Indonesia",
+  "center": {
+    "lat": -6.2241653,
+    "lon": 106.82992795
+  },
+  "bounds": {
+    "north": -6.0707344,
+    "south": -6.3775962,
+    "east": 106.9787509,
+    "west": 106.681105
+  },
+  "nodes": 208281,
+  "edges": 508954,
+  "pois": 41028,
+  "places": 331,
+  "built_at": "2025-12-03 01:51:02"
+}
