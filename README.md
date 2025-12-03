@@ -12,6 +12,24 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 
 ---
 
+## 📑 Table of Contents
+
+- [Key Features](#-key-features)
+- [Architecture](#️-architecture)
+- [Pre-Built Datasets](#-pre-built-datasets)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Running DreamMeridian](#-running-dreammeridian)
+- [Recommended Queries](#-recommended-queries)
+- [Benchmark Results](#-benchmark-results)
+- [Spatial Tools](#-spatial-tools)
+- [Project Structure](#-project-structure)
+- [Troubleshooting](#️-troubleshooting)
+- [Acknowledgments](#-acknowledgments)
+- [License](#-license)
+
+---
+
 ## 🎯 Key Features
 
 - **100% Offline**: All AI inference runs locally on ARM CPU—no cloud, no API keys
@@ -57,6 +75,8 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 
 ---
 
+---
+
 ## 📍 Pre-Built Datasets
 
 Three disaster response scenarios with pre-built offline data:
@@ -76,7 +96,7 @@ Data sourced from [OpenStreetMap](https://www.openstreetmap.org/) via OSMnx. Inc
 ### Hardware
 - **Raspberry Pi 5** (8GB+ RAM recommended) or any ARM64 device
 - ~4GB storage for models and data
-- Tested on: Pi 5 16GB running DietPi
+- Tested on: Pi 5 16GB running DietPi, M3 MacBook Air
 
 ### Software Prerequisites
 ```bash
@@ -92,6 +112,8 @@ source ~/.bashrc  # or restart shell
 ---
 
 ## 🚀 Installation
+
+> Full instructions including Apple Silicon (macOS) setup are available in **[INSTALL.md](INSTALL.md)**.
 
 ### 1. Clone the Repository
 ```bash
@@ -126,7 +148,7 @@ cd ../..
 ```bash
 mkdir -p models
 
-uv run --with huggingface-hub huggingface-cli download \
+uv run --with huggingface-hub hf download \
     Salesforce/xLAM-2-1b-fc-r-gguf \
     xLAM-2-1B-fc-r-Q5_K_M.gguf \
     --local-dir ./models
@@ -214,6 +236,7 @@ Full benchmark suite of 60 natural language queries across all three locations.
 | Jakarta | 95% (19/20) |
 
 See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, failure analysis, and improvement pathways.
+
 ---
 
 ## 🔧 Spatial Tools
@@ -238,9 +261,11 @@ dream-meridian/
 ├── app.py                 # Streamlit dashboard
 ├── build_location.py      # Dataset builder
 ├── tool_grammar.gbnf      # GBNF grammar for tool calls
-├── benchmark_full.sh      # 57-query benchmark suite
+├── benchmark_full.sh      # 60-query benchmark suite
 ├── BENCHMARK_RESULTS.md   # Detailed benchmark analysis
+├── INSTALL.md             # Full installation instructions
 ├── pyproject.toml         # Python dependencies
+├── static/                # Fonts for Streamlit dashboard
 ├── data/
 │   ├── coxs_bazar/        # Cox's Bazar dataset (27K nodes, 6K POIs)
 │   ├── san_juan/          # San Juan dataset (24K nodes, 11K POIs)

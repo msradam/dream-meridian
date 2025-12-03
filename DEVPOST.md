@@ -18,7 +18,7 @@ And 2.6 billion people remain offline globally even without disasters (ITU, 2024
 
 > "There is a gap in getting information and data to local-level responders, humanitarians or governments at the smallest geographic level." — **MapAction Operations Director**
 
-**The gap**: Offline data collection is solved—KoBoToolbox serves 32,000+ organizations with 300+ million submissions. Offline map viewing is solved—QField provides full QGIS spatial capability on mobile. GIS + LLM integration exists—projects like LLM-Geo and GeoGPT use GPT-4 API, while enterprise solutions like IGNESA Vera run offline but require powerful on-premise infrastructure. Separately, small LLMs run on Raspberry Pi for smart home applications. But **no solution combines both**—bringing LLM-powered spatial queries to portable, field-deployable edge hardware. Free tools like QGIS with PostGIS provide powerful offline analysis, but require technical training to operate.
+**The gap**: Offline data collection is solved—KoBoToolbox serves 32,000+ organizations with 300+ million submissions. Offline map viewing is solved—QField provides full QGIS spatial capability on mobile. But **offline spatial queries with accessible interfaces** remain unavailable. A field worker can collect a GPS point and view a map, but cannot ask "How many people live within walking distance of this clinic?" without exporting to desktop GIS software or reaching headquarters. Free tools like QGIS with PostGIS provide powerful offline analysis, but require technical expertise to deploy and operate.
 
 DreamMeridian fills this gap: natural language spatial queries on an ARM-based single-board computer, entirely offline. No GIS training required.
 
@@ -101,7 +101,7 @@ Every layer was selected for ARM edge deployment:
 - **NetworKit**: OpenMP parallelization scales across all 4 Cortex-A76 cores. Graph algorithms are memory-bound, benefiting from Pi 5's improved LPDDR4X bandwidth.
 - **DietPi**: Minimal Linux distribution with ~400MB base footprint. No GUI overhead, services trimmed to essentials.
 
-The result: a full GIS + LLM stack in under 4GB RAM.
+The result: a full GIS + LLM stack in under 4GB RAM, with LLM inference as the only compute-intensive operation.
 
 ### Why xLAM-2-1B
 
@@ -207,27 +207,11 @@ Minimum viable configuration (board + power + SD): ~$150
 
 ---
 
-## Notability
+## What Makes This Project Notable
 
-Offline data collection tools (KoBoToolbox, ODK) dominate humanitarian operations but cannot perform spatial analysis. Offline GIS tools (QField) provide spatial queries but require GIS expertise. GIS + LLM integration exists (LLM-Geo, GeoGPT, IGNESA Vera), but these solutions require either cloud API access or enterprise-grade on-premise infrastructure. Separately, small LLMs run on Raspberry Pi—but not integrated with spatial analysis.
+Offline data collection tools (KoBoToolbox, ODK) dominate humanitarian operations but cannot perform spatial analysis. Offline GIS tools (QField) provide spatial queries but require GIS expertise. Consumer navigation apps (OsmAnd) offer routing but lack operational context—you can navigate to a point, but you can't ask "Which communities are more than one hour from a health facility?"
 
-DreamMeridian bridges this gap: the first open-source system combining **natural language spatial queries** with **offline graph routing** on portable ARM edge hardware—enabling field workers to ask "Find clinics within 30 minutes walk" without GIS training, enterprise infrastructure, or internet connectivity.
-
-### Open Source, Built on Battle-Tested Foundations
-
-DreamMeridian is MIT-licensed and built entirely on proven open-source libraries:
-
-- **llama.cpp**: 75K+ GitHub stars, production-deployed inference engine
-- **DuckDB**: 25K+ stars, embedded analytical database trusted by data teams worldwide
-- **NetworKit**: Peer-reviewed graph library from Karlsruhe Institute of Technology
-- **OpenStreetMap**: 2M+ contributors, the Wikipedia of maps
-
-This matters for humanitarian deployment:
-
-- **Auditability**: Organizations can inspect every line of code—no black boxes
-- **Extensibility**: Add new locations via `build_location.py`, extend POI types, customize tools
-- **Zero license cost**: No per-seat fees or enterprise subscriptions
-- **Data sovereignty**: All processing happens on-device; sensitive beneficiary locations never leave the hardware
+DreamMeridian is the first open-source system combining **natural language spatial queries**, **offline graph routing**, and **accessible interfaces** on ARM edge hardware—enabling field workers to ask "Find clinics within 30 minutes walk" without GIS training or internet connectivity.
 
 The system handles multiple phrasings ("find me," "I need," "show me," "where is"), 10 POI types, routes from 0.66km to 33km, isochrone analysis up to 20 minutes, and three geographic contexts (24K to 208K nodes)—all with 95% accuracy on hardware costing ~$150.
 
@@ -236,6 +220,8 @@ The code is designed for extension: swap the datasets via `build_location.py`, a
 ---
 
 ## Step-by-Step Instructions
+
+> Full instructions including Apple Silicon (macOS) setup are available in `INSTALL.md` in the repository.
 
 ### 1. System Preparation
 ```bash
@@ -270,7 +256,7 @@ cd ../..
 ### 4. Download Model
 ```bash
 mkdir -p models
-uv run --with huggingface-hub huggingface-cli download \
+uv run --with huggingface-hub hf download \
     Salesforce/xLAM-2-1b-fc-r-gguf \
     xLAM-2-1B-fc-r-Q5_K_M.gguf \
     --local-dir ./models
