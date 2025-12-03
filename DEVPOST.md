@@ -91,19 +91,21 @@ The Pi 5's Cortex-A76 has SIMD instructions (NEON) that process multiple numbers
 
 ### Benchmark Results
 
-Full benchmark suite of 30 natural language queries across all three locations:
+Full benchmark suite of 57 natural language queries across all three locations.
 
 | Metric | Value |
 |--------|-------|
-| Total queries | 30 |
-| Success rate | 97% |
-| Avg response time | 10.8s |
-| LLM inference speed | 8.7-10.3 tok/s |
+| Total queries | 57 |
+| Success rate | **94.7%** |
+| Avg response time | 10.87s |
+| LLM inference | 8.9 tok/s |
 
-**Results by Location:**
-- Cox's Bazar: 10/10 queries, avg 10.2s
-- San Juan: 10/10 queries, avg 10.8s
-- Jakarta: 9/10 queries, avg 11.0s
+**By location:**
+- Cox's Bazar: 19/19 (100%)
+- San Juan: 18/19 (94.7%)
+- Jakarta: 17/19 (89.5%)
+
+**By tool:** Route calculation and nearest-POI queries achieved 100% accuracy. The 3 failures were tool selection errors on ambiguous phrasing—addressable through prompt engineering. See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for detailed analysis.
 
 ### Challenges
 

@@ -172,37 +172,22 @@ Open http://[pi-ip-address]:8501 in your browser.
 
 ### Cox's Bazar, Bangladesh (Rohingya Refugee Camps)
 ```bash
-# Find nearest medical facility
 uv run python dream-meridian.py -l coxs_bazar "I need to find the nearest hospital to Camp 6"
-
-# Calculate walking route between camps
 uv run python dream-meridian.py -l coxs_bazar "How do I walk from Camp 3 to Camp 8W"
-
-# Analyze walkable area
 uv run python dream-meridian.py -l coxs_bazar "Show me everywhere I can walk to in 15 minutes from Camp 8W"
 ```
 
 ### San Juan, Puerto Rico (Hurricane Response)
 ```bash
-# Find nearest hospital
 uv run python dream-meridian.py -l san_juan "Where is the closest hospital to Condado"
-
-# Get walking directions
 uv run python dream-meridian.py -l san_juan "How do I get from Condado to Santurce on foot"
-
-# Analyze evacuation radius
 uv run python dream-meridian.py -l san_juan "Show me a 20 minute walking radius from Condado"
 ```
 
 ### Jakarta, Indonesia (Urban Flood Response)
 ```bash
-# Find nearest bank
 uv run python dream-meridian.py -l jakarta "Is there a bank near Gelora"
-
-# Calculate walking distance
 uv run python dream-meridian.py -l jakarta "What is the distance on foot from Pinangsia to Kalianyar"
-
-# Analyze reachable area
 uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walking from Serdang"
 ```
 
@@ -210,39 +195,25 @@ uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walki
 
 ## ⚡ Benchmark Results
 
-Full benchmark suite of 30 natural language queries across all three locations.
-
-**Run the benchmark:**
+Full benchmark suite of 57 natural language queries across all three locations.
 ```bash
 ./benchmark_full.sh
 ```
 
-### Summary (Raspberry Pi 5, 16GB RAM)
-
 | Metric | Value |
 |--------|-------|
-| Total queries | 30 |
-| Successful | 29 |
-| Success rate | 97% |
-| Avg response time | 10.8s |
-| Min response time | 8.1s |
-| Max response time | 14.0s |
+| Total queries | 57 |
+| Success rate | **94.7%** |
+| Avg response time | 10.87s |
+| LLM inference | 8.9 tok/s |
 
-### Results by Location
+| Location | Success |
+|----------|---------|
+| Cox's Bazar | 100% |
+| San Juan | 94.7% |
+| Jakarta | 89.5% |
 
-| Location | Queries | Success | Avg Time |
-|----------|---------|---------|----------|
-| Cox's Bazar | 10 | 100% | 10.2s |
-| San Juan | 10 | 100% | 10.8s |
-| Jakarta | 10 | 90% | 11.0s |
-
-### LLM Performance
-
-| Metric | Value |
-|--------|-------|
-| Inference speed | 8.7-10.3 tok/s |
-| Prompt tokens | 203-231 |
-| Completion tokens | 49-73 |
+See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, failure analysis, and improvement pathways.
 
 ---
 
@@ -268,7 +239,8 @@ dream-meridian/
 ├── app.py                 # Streamlit dashboard
 ├── build_location.py      # Dataset builder
 ├── tool_grammar.gbnf      # GBNF grammar for tool calls
-├── benchmark_full.sh      # 30-query benchmark suite
+├── benchmark_full.sh      # 57-query benchmark suite
+├── BENCHMARK_RESULTS.md   # Detailed benchmark analysis
 ├── pyproject.toml         # Python dependencies
 ├── data/
 │   ├── coxs_bazar/        # Cox's Bazar dataset (27K nodes, 6K POIs)
