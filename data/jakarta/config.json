@@ -15,5 +15,10 @@
   "edges": 508954,
   "pois": 41028,
   "places": 331,
-  "built_at": "2025-12-03 01:51:02"
+  "built_at": "2025-12-03 01:51:02",
+  "examples": [
+    "Find the nearest hospital to Bambu Apus",
+    "How do I walk from Cipulir to Lebak Bulus?",
+    "What can I reach in 15 minutes walking from Serdang?"
+  ]
 }

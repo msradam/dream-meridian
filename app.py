@@ -31,28 +31,29 @@ CUSTOM_CSS = """
 /* Clan Font Family */
 @font-face {
     font-family: 'Clan';
-    src: url('app/static/ClanOT-Book.woff2') format('woff2'),
-         url('app/static/ClanOT-Book.woff') format('woff'),
-         url('app/static/ClanOT-Book.ttf') format('truetype');
+    src: url('app/static/fonts/ClanOT-Book.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Clan';
-    src: url('app/static/ClanOT-Medium.woff2') format('woff2'),
-         url('app/static/ClanOT-Medium.woff') format('woff'),
-         url('app/static/ClanOT-Medium.ttf') format('truetype');
+    src: url('app/static/fonts/ClanOT-Medium.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
     font-family: 'Clan';
-    src: url('app/static/ClanOT-Bold.woff2') format('woff2'),
-         url('app/static/ClanOT-Bold.woff') format('woff'),
-         url('app/static/ClanOT-Bold.ttf') format('truetype');
+    src: url('app/static/fonts/ClanOT-Bold.woff2') format('woff2');
     font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('app/static/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+    font-weight: 400;
     font-style: normal;
     font-display: swap;
 }

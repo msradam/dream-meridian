@@ -5,8 +5,5 @@ backgroundColor = "#0f172a"
 secondaryBackgroundColor = "#1e293b"
 textColor = "#e2e8f0"
 
-# JetBrains Mono for code blocks
-codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-
 [server]
 enableStaticServing = true
