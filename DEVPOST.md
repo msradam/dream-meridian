@@ -89,23 +89,27 @@ The Pi 5's Cortex-A76 has SIMD instructions (NEON) that process multiple numbers
 
 **NetworKit** parallelizes across the Pi's 4 CPU cores for graph algorithms.
 
-### Benchmark Results
+## ⚡ Benchmark Results
 
-Full benchmark suite of 57 natural language queries across all three locations.
+Full benchmark suite of 60 natural language queries across all three locations.
+```bash
+./benchmark_full.sh
+```
 
 | Metric | Value |
 |--------|-------|
-| Total queries | 57 |
-| Success rate | **94.7%** |
+| Total queries | 60 |
+| Success rate | **95.0%** |
 | Avg response time | 10.87s |
 | LLM inference | 8.9 tok/s |
 
-**By location:**
-- Cox's Bazar: 19/19 (100%)
-- San Juan: 18/19 (94.7%)
-- Jakarta: 17/19 (89.5%)
+| Location | Success |
+|----------|---------|
+| Cox's Bazar | 95% (19/20) |
+| San Juan | 95% (19/20) |
+| Jakarta | 95% (19/20) |
 
-**By tool:** Route calculation and nearest-POI queries achieved 100% accuracy. The 3 failures were tool selection errors on ambiguous phrasing—addressable through prompt engineering. See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for detailed analysis.
+See BENCHMARK_RESULTS.md in the GitHub repo for detailed examples, failure analysis, and improvement pathways.
 
 ### Challenges
 
