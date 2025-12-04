@@ -225,7 +225,7 @@ Power draw figures are approximate based on typical load measurements; actual co
 
 | Metric | Value |
 |--------|-------|
-| Success rate | **95.0%** (57/60) |
+| Success rate | **95.0%** (54/57) |
 | Avg response time | 10.87s |
 | LLM inference | 8.9 tok/s |
 
