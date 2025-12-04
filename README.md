@@ -41,6 +41,7 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 ---
 
 ## 🏗️ Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Natural Language Query                    │
@@ -72,8 +73,6 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 │  ~6K-41K POIs per city   │    │  ~25K-208K nodes per city        │
 └──────────────────────────┘    └──────────────────────────────────┘
 ```
-
----
 
 ---
 
@@ -217,23 +216,24 @@ uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walki
 
 ## ⚡ Benchmark Results
 
-Full benchmark suite of 60 natural language queries across all three locations.
+Full benchmark suite of 57 natural language queries across all three locations.
+
 ```bash
 ./benchmark_full.sh
 ```
 
 | Metric | Value |
 |--------|-------|
-| Total queries | 60 |
-| Success rate | **95.0%** |
+| Total queries | 57 |
+| Success rate | **94.7%** (54/57) |
 | Avg response time | 10.87s |
 | LLM inference | 8.9 tok/s |
 
-| Location | Success |
-|----------|---------|
-| Cox's Bazar | 95% (19/20) |
-| San Juan | 95% (19/20) |
-| Jakarta | 95% (19/20) |
+| Location | Queries | Correct | Success Rate |
+|----------|---------|---------|--------------|
+| Cox's Bazar | 19 | 19 | 100% |
+| San Juan | 19 | 18 | 94.7% |
+| Jakarta | 19 | 17 | 89.5% |
 
 See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, failure analysis, and improvement pathways.
 
@@ -253,6 +253,7 @@ See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, fail
 ---
 
 ## 📁 Project Structure
+
 ```
 dream-meridian/
 ├── dream-meridian.py      # Main query engine
@@ -261,7 +262,7 @@ dream-meridian/
 ├── app.py                 # Streamlit dashboard
 ├── build_location.py      # Dataset builder
 ├── tool_grammar.gbnf      # GBNF grammar for tool calls
-├── benchmark_full.sh      # 60-query benchmark suite
+├── benchmark_full.sh      # Benchmark suite
 ├── BENCHMARK_RESULTS.md   # Detailed benchmark analysis
 ├── INSTALL.md             # Full installation instructions
 ├── pyproject.toml         # Python dependencies
@@ -280,8 +281,8 @@ dream-meridian/
 
 ### LLM server won't start
 ```bash
-lsof -i :8080        # Check if port is in use
-pkill -f llama-server  # Kill existing process
+lsof -i :8080              # Check if port is in use
+pkill -f llama-server      # Kill existing process
 ```
 
 ### Out of memory
