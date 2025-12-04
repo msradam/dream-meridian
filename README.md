@@ -6,13 +6,23 @@ DreamMeridian is a fully offline spatial query system that runs entirely on ARM-
 
 Built for humanitarian scenarios where internet access is unreliable: refugee camp navigation, disaster response coordination, and field operations planning.
 
+**Author:** [Adam Munawar Rahman](https://github.com/msradam)
+
 ![ARM](https://img.shields.io/badge/ARM-Cortex--A76-blue)
 ![Offline](https://img.shields.io/badge/Offline-100%25-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 
 ---
 
-> **📖 [Full Project Writeup](WRITEUP.md)** — Technical deep-dive, ARM optimization rationale, benchmarks, and humanitarian context for the ARM AI Developer Challenge 2025.
+> **🎬 [Watch the Demo](https://www.youtube.com/watch?v=80KqDcOSRPc)** (3 min) — See DreamMeridian running on a Raspberry Pi 5
+
+> **📖 [Full Project Writeup](WRITEUP.md)** — Technical deep-dive, ARM optimization rationale, benchmarks, and humanitarian context for the ARM AI Developer Challenge 2025
+
+---
+
+![DreamMeridian Dashboard](docs/images/dashboard.png)
+*Web dashboard showing isochrone analysis in Cox's Bazar refugee camps*
 
 ---
 
@@ -29,6 +39,7 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 - [Spatial Tools](#-spatial-tools)
 - [Project Structure](#-project-structure)
 - [Troubleshooting](#️-troubleshooting)
+- [Contributing](#-contributing)
 - [Acknowledgments](#-acknowledgments)
 - [License](#-license)
 
@@ -45,7 +56,6 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 ---
 
 ## 🏗️ Architecture
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Natural Language Query                    │
@@ -109,7 +119,7 @@ Data sourced from [OpenStreetMap](https://www.openstreetmap.org/) via OSMnx. Inc
 ```bash
 # System packages (Debian/Ubuntu/DietPi/Raspberry Pi OS)
 sudo apt update
-sudo apt install -y build-essential cmake git python3 python3-venv
+sudo apt install -y build-essential cmake git python3 python3-venv libopenblas-dev
 
 # uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -225,7 +235,6 @@ uv run python dream-meridian.py -l jakarta "What can I reach in 15 minutes walki
 ## ⚡ Benchmark Results
 
 Full benchmark suite of 57 natural language queries across all three locations.
-
 ```bash
 ./benchmark_full.sh
 ```
@@ -261,7 +270,6 @@ See **[BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)** for detailed examples, fail
 ---
 
 ## 📁 Project Structure
-
 ```
 dream-meridian/
 ├── dream-meridian.py      # Main query engine
@@ -273,7 +281,10 @@ dream-meridian/
 ├── benchmark_full.sh      # Benchmark suite
 ├── BENCHMARK_RESULTS.md   # Detailed benchmark analysis
 ├── INSTALL.md             # Full installation instructions
+├── WRITEUP.md             # Full project writeup
 ├── pyproject.toml         # Python dependencies
+├── docs/
+│   └── images/            # Screenshots and diagrams
 ├── static/                # Fonts for Streamlit dashboard
 ├── data/
 │   ├── coxs_bazar/        # Cox's Bazar dataset (27K nodes, 6K POIs)
@@ -310,13 +321,21 @@ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue first to discuss proposed changes.
+
+If you'd like to add support for a new location, see `build_location.py` for the dataset generation pipeline.
+
+---
+
 ## 🙏 Acknowledgments
 
 - **[xLAM-2](https://github.com/SalesforceAIResearch/xLAM)** by Salesforce AI Research - Tool-calling LLM
 - **[llama.cpp](https://github.com/ggerganov/llama.cpp)** by Georgi Gerganov - Efficient inference engine
-- **[OSMnx](https://github.com/gboeing/osmnx)** by Geoff Boeing - Street network retrieval and analysis
 - **[NetworKit](https://networkit.github.io/)** - High-performance graph algorithms
 - **[DuckDB](https://duckdb.org/)** - Embedded analytical database
+- **[OSMnx](https://github.com/gboeing/osmnx)** by Geoff Boeing - Street network retrieval and analysis
 - **[OpenStreetMap](https://www.openstreetmap.org/)** - Geographic data
 
 ---
