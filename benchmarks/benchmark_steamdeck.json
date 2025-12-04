@@ -1,132 +1,132 @@
 {
-  "device": "pi5",
-  "architecture": "ARM Cortex-A76",
-  "platform": "Linux-6.12.47+rpt-rpi-2712-aarch64-with-glibc2.41",
-  "total_time": 86.01,
-  "mean_time": 8.6,
-  "min_time": 7.66,
-  "max_time": 10.45,
-  "avg_tokens_per_sec": 9.5,
+  "device": "steamdeck",
+  "architecture": "x86-64 Zen 2",
+  "platform": "Linux-6.11.11-valve24-2-neptune-611-gfd0dd251480d-x86_64-with-glibc2.41",
+  "total_time": 39.43,
+  "mean_time": 3.94,
+  "min_time": 3.44,
+  "max_time": 4.87,
+  "avg_tokens_per_sec": 20.4,
   "success_rate": 1.0,
   "results": [
     {
       "location": "coxs_bazar",
       "query": "Find the nearest hospital to Camp 6",
       "success": true,
-      "time": 8.300209522247314,
+      "time": 3.5369937419891357,
       "tool": "find_nearest_poi_with_route",
       "llm_stats": {
         "prompt_tokens": 203,
         "completion_tokens": 52,
-        "tokens_per_sec": 9.190123868731098
+        "tokens_per_sec": 20.381638338802404
       }
     },
     {
       "location": "coxs_bazar",
       "query": "How do I walk from Camp 3 to Camp 9",
       "success": true,
-      "time": 9.615187168121338,
+      "time": 4.802672386169434,
       "tool": "calculate_route",
       "llm_stats": {
         "prompt_tokens": 229,
         "completion_tokens": 70,
-        "tokens_per_sec": 10.137935299407264
+        "tokens_per_sec": 20.35265924938229
       }
     },
     {
       "location": "coxs_bazar",
       "query": "Show 15 minute walkable area from Camp 8W",
       "success": true,
-      "time": 7.657973289489746,
+      "time": 3.682396650314331,
       "tool": "generate_isochrone",
       "llm_stats": {
         "prompt_tokens": 207,
         "completion_tokens": 50,
-        "tokens_per_sec": 9.78703413717507
+        "tokens_per_sec": 20.423384939142398
       }
     },
     {
       "location": "san_juan",
       "query": "Find the nearest clinic to Condado",
       "success": true,
-      "time": 8.02271819114685,
+      "time": 3.443758964538574,
       "tool": "find_nearest_poi_with_route",
       "llm_stats": {
         "prompt_tokens": 203,
         "completion_tokens": 51,
-        "tokens_per_sec": 9.114725983635314
+        "tokens_per_sec": 20.42895191064777
       }
     },
     {
       "location": "san_juan",
       "query": "Walking route from Santurce to Miramar",
       "success": true,
-      "time": 10.44974660873413,
+      "time": 4.873126029968262,
       "tool": "calculate_route",
       "llm_stats": {
         "prompt_tokens": 227,
         "completion_tokens": 72,
-        "tokens_per_sec": 9.544027460287898
+        "tokens_per_sec": 20.20474704919491
       }
     },
     {
       "location": "san_juan",
       "query": "List pharmacies within 1km of Ocean Park",
       "success": true,
-      "time": 8.241315364837646,
+      "time": 3.70548677444458,
       "tool": "list_pois",
       "llm_stats": {
         "prompt_tokens": 205,
         "completion_tokens": 59,
-        "tokens_per_sec": 9.48707867923785
+        "tokens_per_sec": 20.479782289500815
       }
     },
     {
       "location": "jakarta",
       "query": "Find nearest hospital to Menteng",
       "success": true,
-      "time": 7.864319562911987,
+      "time": 3.8226943016052246,
       "tool": "find_nearest_poi_with_route",
       "llm_stats": {
         "prompt_tokens": 202,
         "completion_tokens": 52,
-        "tokens_per_sec": 9.821494340363886
+        "tokens_per_sec": 20.442372950652114
       }
     },
     {
       "location": "jakarta",
       "query": "How far to walk from Gambir to Kemang",
       "success": true,
-      "time": 9.281932830810547,
+      "time": 4.052662372589111,
       "tool": "generate_isochrone",
       "llm_stats": {
         "prompt_tokens": 206,
-        "completion_tokens": 58,
-        "tokens_per_sec": 9.489083218769014
+        "completion_tokens": 49,
+        "tokens_per_sec": 20.465382804985367
       }
     },
     {
       "location": "jakarta",
       "query": "Schools within 2km of Gelora",
       "success": true,
-      "time": 7.736322402954102,
+      "time": 3.7897896766662598,
       "tool": "generate_isochrone",
       "llm_stats": {
         "prompt_tokens": 205,
-        "completion_tokens": 50,
-        "tokens_per_sec": 9.525329947904066
+        "completion_tokens": 58,
+        "tokens_per_sec": 20.376136452662195
       }
     },
     {
       "location": "coxs_bazar",
       "query": "Clinics near Camp 10",
       "success": true,
-      "time": 8.834648370742798,
+      "time": 3.7187628746032715,
       "tool": "list_pois",
       "llm_stats": {
         "prompt_tokens": 201,
-        "completion_tokens": 58,
-        "tokens_per_sec": 9.322008700005705
+        "completion_tokens": 57,
+        "tokens_per_sec": 20.39379341731283
       }
     }
   ]
