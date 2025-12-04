@@ -4,6 +4,8 @@
 
 DreamMeridian answers natural language spatial queries entirely on-device on a Raspberry Pi 5. Ask "Find hospitals within 2km of Camp 8W" in Cox's Bazar, "How do I walk from Condado to Santurce?" in San Juan, or "Is there a pharmacy near Gelora?" in Jakarta, and get real answers with walking routes and distances in under 11 seconds. No internet, no cloud, no GPU. Just a $120 ARM board running at under 10 watts.
 
+Overview video (also attached to DevPost reel): https://www.youtube.com/watch?v=80KqDcOSRPc
+
 ---
 
 ## Inspiration
@@ -116,7 +118,7 @@ Raspberry Pi hardware is already deployed in humanitarian contexts:
 
 - **Jangala Big Box**: Pi-based connectivity for Calais camp and Kakuma (Kenya); won 2019 Tech4Good Africa award
 
-DreamMeridian adds spatial intelligence to this proven hardware platform.
+DreamMeridian adds spatial intelligence to this proven hardware platform, with its current implementation on Raspberry Pi serving as a powerful proof-of-concept that can scale up to ARM Edge devices with more available compute or via clustered Pi devices.
 
 ### Full-Stack ARM Efficiency
 
@@ -229,7 +231,7 @@ Power draw figures are approximate based on typical load measurements; actual co
 | Avg response time | 10.87s |
 | LLM inference | 8.9 tok/s |
 
-The 3 failures share a common pattern: the LLM defaulted to isochrone generation for ambiguous "where is nearest" queries. This is addressable through prompt engineering or by encouraging users to phrase queries more specifically (e.g., "find nearest hospital" rather than "where is a hospital").
+The 3 failures share a common pattern: the LLM defaulted to isochrone generation for ambiguous "where is nearest" queries. This is addressable via few-shot prompting and will be a focus for further refinement.
 
 ---
 
@@ -298,7 +300,7 @@ Model name:              Cortex-A76
 
 **Medium-term**: Public CLI pipeline for any OSM location, HDX integration for crisis region datasets, tool chaining for compound multi-step queries (e.g., "Find the nearest hospital, then show pharmacies along the route")
 
-**Long-term**: Support for Pi AI HAT+ modules (Hailo-8L NPU), ruggedized enclosures with solar integration, deployable spatial AI kits for humanitarian field operations
+**Long-term**: Support for Pi AI HAT+ modules (Hailo-8L NPU), ruggedized enclosures with solar integration, deployable spatial AI kits for humanitarian field operations, testing on other ARM devices like NVIDIA Jetson Nano
 
 ---
 
