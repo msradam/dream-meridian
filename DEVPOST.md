@@ -38,9 +38,9 @@ UNHCR mandates that 80% of refugees must be within one hour's walk of a health f
 
 DreamMeridian enables queries like:
 
-- "Show areas more than 500m from a water point"
-- "How many clinics are within 30 minutes walk of Camp 6?"
-- "What's the walking route from the distribution point to the shelter?"
+- "Find the nearest hospital to Bambu Apus"
+- "What can I reach in 15 minutes from Camp 12?
+- "What are the nearest shelters to Condado?"
 
 ### Interfaces
 
