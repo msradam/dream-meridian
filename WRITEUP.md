@@ -1,5 +1,7 @@
 # 💠 DreamMeridian: GeoAI on Pi
 
+**ARM AI Developer Challenge 2025 Submission**
+
 **Author: Adam Munawar Rahman, December 2025**
 
 DreamMeridian answers natural language spatial queries entirely on-device on a Raspberry Pi 5. Ask "Find hospitals within 2km of Camp 8W" in Cox's Bazar, "How do I walk from Condado to Santurce?" in San Juan, or "Is there a pharmacy near Gelora?" in Jakarta, and get real answers with walking routes and distances in under 11 seconds. No internet, no cloud, no GPU. Just a $120 ARM board running at under 10 watts.
@@ -68,13 +70,13 @@ Offline data collection tools (KoBoToolbox, ODK) dominate humanitarian operation
 
 DreamMeridian brings together **natural language spatial queries**, **offline graph routing**, and **accessible interfaces** on ARM edge hardware. This combination is unavailable in existing open-source tools.
 
-The system handles:
+The current implementation demonstrates handling of:
 
 - Multiple phrasings ("find me," "I need," "show me," "where is")
 - 10 POI types
 - Routes from 0.66km to 33km
 - Isochrone analysis up to 20 minutes
-- Three geographic contexts (24K to 208K nodes)
+- Multiple geographic contexts (24K to 208K nodes)
 
 All with 95% accuracy on hardware costing ~$150.
 

@@ -12,6 +12,10 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
 
 ---
 
+> **📖 [Full Project Writeup](WRITEUP.md)** — Technical deep-dive, ARM optimization rationale, benchmarks, and humanitarian context for the ARM AI Developer Challenge 2025.
+
+---
+
 ## 📑 Table of Contents
 
 - [Key Features](#-key-features)
