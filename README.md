@@ -54,20 +54,24 @@ Built for humanitarian scenarios where internet access is unreliable: refugee ca
                                   │
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  xLAM-2-1B (Q5_K_M)  │  Tool-calling LLM optimized for ARM      │
-│  via llama.cpp       │  NEON + dotprod + Flash Attention        │
+│  Geocoding Layer                                                 │
+│  Place name → lat/lon: "Camp 6" → (21.20, 92.16)                │
+│  Modified query: "Find nearest hospital to (21.20, 92.16)"      │
 └─────────────────────────────────────────────────────────────────┘
                                   │
-                    ┌─────────────┴─────────────┐
-                    ▼                           ▼
-┌──────────────────────────┐    ┌──────────────────────────────────┐
-│  Geocoding Layer         │    │  Spatial Tools                   │
-│  Place name → lat/lon    │    │  • list_pois                     │
-│  "Camp 6" → (21.20,92.16)│    │  • find_nearest_poi_with_route   │
-└──────────────────────────┘    │  • calculate_route               │
-                                │  • find_along_route              │
-                                │  • generate_isochrone            │
-                                └──────────────────────────────────┘
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  xLAM-2-1B (Q5_K_M)  │  Tool-calling LLM optimized for ARM      │
+│  via llama.cpp       │  NEON + dotprod + GBNF grammar           │
+│  Selects tool + generates arguments with resolved coordinates   │
+└─────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Spatial Tools                                                   │
+│  list_pois │ find_nearest_poi_with_route │ calculate_route      │
+│  find_along_route │ generate_isochrone │ geocode_place          │
+└─────────────────────────────────────────────────────────────────┘
                                   │
                     ┌─────────────┴─────────────┐
                     ▼                           ▼
