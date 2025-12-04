@@ -296,7 +296,7 @@ Model name:              Cortex-A76
 
 ## What's Next
 
-**Near-term**: Voice input via local Whisper, offline map tile caching, GPS module for current-location queries
+**Near-term**: Voice input via local Whisper, GPS module for current-location queries
 
 **Medium-term**: Public CLI pipeline for any OSM location, HDX integration for crisis region datasets, tool chaining for compound multi-step queries (e.g., "Find the nearest hospital, then show pharmacies along the route")
 
