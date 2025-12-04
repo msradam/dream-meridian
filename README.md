@@ -310,6 +310,7 @@ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
 - **[xLAM-2](https://github.com/SalesforceAIResearch/xLAM)** by Salesforce AI Research - Tool-calling LLM
 - **[llama.cpp](https://github.com/ggerganov/llama.cpp)** by Georgi Gerganov - Efficient inference engine
+- **[OSMnx](https://github.com/gboeing/osmnx)** by Geoff Boeing - Street network retrieval and analysis
 - **[NetworKit](https://networkit.github.io/)** - High-performance graph algorithms
 - **[DuckDB](https://duckdb.org/)** - Embedded analytical database
 - **[OpenStreetMap](https://www.openstreetmap.org/)** - Geographic data
